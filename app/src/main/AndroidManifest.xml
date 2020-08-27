@@ -4,7 +4,14 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- The application can be only used in case you have BLE in your mobile -->
+
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
     <application
         android:allowBackup="true"
@@ -13,7 +20,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".BluetoothSearch"></activity>
+        <activity android:name=".DeviceNotFound"></activity>
+        <activity android:name=".ScanDevice" />
+        <activity android:name=".DeviceScanActivity" />
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"

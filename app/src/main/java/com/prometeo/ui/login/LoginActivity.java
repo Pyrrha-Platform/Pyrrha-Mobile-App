@@ -23,12 +23,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.prometeo.BluetoothSearch;
+import com.prometeo.DeviceScanActivity;
+import com.prometeo.ScanDevice;
 import com.prometeo.MainActivity;
 import com.prometeo.R;
-import com.prometeo.ui.login.LoginViewModel;
-import com.prometeo.ui.login.LoginViewModelFactory;
-import com.prometeo.MainActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -86,7 +84,7 @@ public class LoginActivity extends AppCompatActivity {
                 Intent intent;
 
                 if (bluetoothDevice.isChecked()) {
-                    intent = new Intent(LoginActivity.this, BluetoothSearch.class);
+                    intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
                 } else {
                     intent = new Intent(LoginActivity.this, MainActivity.class);
                 }

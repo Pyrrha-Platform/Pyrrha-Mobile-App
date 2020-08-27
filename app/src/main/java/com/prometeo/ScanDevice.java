@@ -15,13 +15,15 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.prometeo.ui.login.LoginActivity;
+
 import java.util.ArrayList;
 
-public class BluetoothSearch extends AppCompatActivity {
+public class ScanDevice extends AppCompatActivity {
 
-    ListView listView;
-    TextView statusTextView;
-    Button searchButton;
+    ListView listDevices;
+    Button buttonAddDevice;
+    Button buttonScanDevice;
     ArrayList<String> bluetoothDevices = new ArrayList<>();
     ArrayList<String> addresses = new ArrayList<>();
     ArrayAdapter arrayAdapter;
@@ -36,8 +38,8 @@ public class BluetoothSearch extends AppCompatActivity {
             Log.i("Action",action);
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                statusTextView.setText("Finished");
-                searchButton.setEnabled(true);
+                buttonScanDevice.setEnabled(true);
+                buttonAddDevice.setEnabled(true);
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = device.getName();
@@ -62,30 +64,39 @@ public class BluetoothSearch extends AppCompatActivity {
         }
     };
 
-    public void searchClicked(View view) {
-        statusTextView.setText("Searching...");
-        searchButton.setEnabled(false);
+    public void scanClicked(View view) {
+        buttonScanDevice.setEnabled(false);
+        buttonAddDevice.setEnabled(false);
         bluetoothDevices.clear();
         addresses.clear();
         bluetoothAdapter.startDiscovery();
+    }
+
+    public void addClicked(View view) {
+        Intent intent;
+
+        intent = new Intent(ScanDevice.this, MainActivity.class);
+
+        startActivity(intent);
+
     }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bluetooth_search);
+//        setContentView(R.layout.activity_scan_device);
 
-        listView = findViewById(R.id.listView);
-        statusTextView = findViewById(R.id.statusTextView);
-        searchButton = findViewById(R.id.searchButton);
+        listDevices = findViewById(R.id.listDevices);
+        buttonScanDevice = findViewById(R.id.buttonScanDevice);
+        buttonAddDevice = findViewById(R.id.buttonAddDevice);
 
         int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
         androidx.core.app.ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
 
         arrayAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,bluetoothDevices);
 
-        listView.setAdapter(arrayAdapter);
+        listDevices.setAdapter(arrayAdapter);
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
