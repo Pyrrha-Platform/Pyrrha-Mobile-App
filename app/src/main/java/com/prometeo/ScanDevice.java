@@ -6,16 +6,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.prometeo.ui.login.LoginActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
@@ -35,7 +33,7 @@ public class ScanDevice extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.i("Action",action);
+            Log.i("Action", action);
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 buttonScanDevice.setEnabled(true);
@@ -44,9 +42,9 @@ public class ScanDevice extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = device.getName();
                 String address = device.getAddress();
-                String rssi = Integer.toString(intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE));
+                String rssi = Integer.toString(intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE));
 
-                Log.i("Device Found","Name: " + name + " Address: " + address + " RSSI: " + rssi);
+                Log.i("Device Found", "Name: " + name + " Address: " + address + " RSSI: " + rssi);
 
                 if (!addresses.contains(address)) {
                     addresses.add(address);
@@ -92,9 +90,9 @@ public class ScanDevice extends AppCompatActivity {
         buttonAddDevice = findViewById(R.id.buttonAddDevice);
 
         int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-        androidx.core.app.ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+        androidx.core.app.ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
 
-        arrayAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,bluetoothDevices);
+        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, bluetoothDevices);
 
         listDevices.setAdapter(arrayAdapter);
 

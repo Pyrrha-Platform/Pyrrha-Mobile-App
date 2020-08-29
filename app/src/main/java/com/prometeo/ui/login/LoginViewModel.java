@@ -1,15 +1,15 @@
 package com.prometeo.ui.login;
 
+import android.util.Patterns;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import android.util.Patterns;
-
+import com.prometeo.R;
 import com.prometeo.login.LoginRepository;
 import com.prometeo.login.Result;
 import com.prometeo.login.model.LoggedInUser;
-import com.prometeo.R;
 
 public class LoginViewModel extends ViewModel {
 

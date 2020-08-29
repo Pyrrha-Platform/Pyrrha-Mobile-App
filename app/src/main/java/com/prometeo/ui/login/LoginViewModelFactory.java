@@ -1,8 +1,8 @@
 package com.prometeo.ui.login;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.annotation.NonNull;
 
 import com.prometeo.login.LoginDataSource;
 import com.prometeo.login.LoginRepository;

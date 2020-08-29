@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 
 // test
-    
+
 public class LoginDataSource {
 
     public Result<LoggedInUser> login(String username, String password) {
