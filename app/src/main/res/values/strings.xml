@@ -44,4 +44,6 @@
     <string name="co">CO</string>
     <string name="no2">NO2</string>
     <string name="_0">0</string>
+    <string name="btn_start_message">Send Data</string>
+
 </resources>

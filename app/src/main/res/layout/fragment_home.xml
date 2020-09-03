@@ -8,6 +8,7 @@
     tools:context=".ui.home.HomeFragment">
 
     <TableLayout
+        android:id="@+id/tableLayout"
         android:layout_width="280dp"
         android:layout_height="223dp"
         android:layout_marginStart="24dp"
@@ -231,5 +232,19 @@
 
         </TableRow>
     </TableLayout>
+
+    <Button
+        android:id="@+id/btnStartMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/boton_rojo"
+        android:text="@string/btn_start_message"
+        android:textColor="@color/design_default_color_on_primary"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
