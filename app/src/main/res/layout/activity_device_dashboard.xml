@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/fondo_azul"
-    tools:context=".ui.home.HomeFragment">
+    tools:context=".DeviceDashboard">
 
     <TableLayout
         android:layout_width="280dp"
@@ -35,7 +35,7 @@
                 android:layout_marginTop="1dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="Temperature"
+                android:text="@string/temperature"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -50,8 +50,43 @@
                 android:layout_marginEnd="219dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="0"
+                android:text="@string/_0"
                 android:textSize="24sp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textHumidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="1dp"
+                android:layout_marginStart="60dp"
+                android:layout_marginLeft="1dp"
+                android:layout_marginTop="1dp"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:text="@string/humidity"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+
+            <TextView
+                android:id="@+id/valueHumidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="1dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="1dp"
+                android:layout_marginTop="1dp"
+                android:layout_marginEnd="216dp"
+                android:layout_marginRight="1dp"
+                android:layout_marginBottom="1dp"
+                android:text="@string/_0"
+                android:textSize="24sp" />
+
         </TableRow>
 
         <TableRow
@@ -68,7 +103,7 @@
                 android:layout_marginTop="1dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="CO"
+                android:text="@string/co"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -84,7 +119,7 @@
                 android:layout_marginEnd="251dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="0"
+                android:text="@string/_0"
                 android:textSize="24sp" />
 
 
@@ -104,7 +139,7 @@
                 android:layout_marginTop="1dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="NO2"
+                android:text="@string/no2"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -120,116 +155,11 @@
                 android:layout_marginEnd="247dp"
                 android:layout_marginRight="1dp"
                 android:layout_marginBottom="1dp"
-                android:text="0"
+                android:text="@string/_0"
                 android:textSize="24sp" />
 
         </TableRow>
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/textHumidity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="60dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="Formaldehyde"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-
-            <TextView
-                android:id="@+id/valueHumidity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginEnd="216dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="0"
-                android:textSize="24sp" />
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/textAcroleine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="60dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="Acroleine"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-
-            <TextView
-                android:id="@+id/valueAcroleine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="35dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginEnd="231dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="0"
-                android:textSize="24sp" />
-
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/textBenzene"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="60dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="Benzene"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-
-            <TextView
-                android:id="@+id/valueBenzene"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="1dp"
-                android:layout_marginStart="37dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginEnd="233dp"
-                android:layout_marginRight="1dp"
-                android:layout_marginBottom="1dp"
-                android:text="0"
-                android:textSize="24sp" />
-
-        </TableRow>
     </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

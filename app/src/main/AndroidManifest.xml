@@ -3,25 +3,23 @@
     package="com.prometeo">
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-
-    <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-    <!-- The application can be only used in case you have BLE in your mobile -->
-
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" /> <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- The application can be only used in case you have BLE in your mobile -->
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <application
+
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DeviceNotFound"></activity>
-        <activity android:name=".ScanDevice" />
+        <activity android:name=".DeviceDashboard"></activity>
+        <service android:name=".BluetoothLeService" android:enabled="true"/>
+        <activity android:name=".DeviceNotFound" />
         <activity android:name=".DeviceScanActivity" />
         <activity
             android:name=".MainActivity"

@@ -50,8 +50,9 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
 
-    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-            UUID.fromString(GattAttributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_PROMETEO_MEASUREMENT =
+            UUID.fromString(GattAttributes.PROMETEO_MEASUREMENT);
+
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -112,31 +113,10 @@ public class BluetoothLeService extends Service {
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
 
-        // This is special handling for the Heart Rate Measurement profile.  Data parsing is
-        // carried out as per profile specifications:
-        // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
-            }
-            final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-        } else {
-            // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
+                final String sData = new String(data);
+                intent.putExtra(EXTRA_DATA, sData);
         }
         sendBroadcast(intent);
     }
@@ -152,6 +132,7 @@ public class BluetoothLeService extends Service {
         return mBinder;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public boolean onUnbind(Intent intent) {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
@@ -251,6 +232,7 @@ public class BluetoothLeService extends Service {
      * After using a given BLE device, the app must call this method to ensure resources are
      * released properly.
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void close() {
         if (mBluetoothGatt == null) {
             return;
@@ -265,14 +247,16 @@ public class BluetoothLeService extends Service {
      * callback.
      *
      * @param characteristic The characteristic to read from.
+     * @return
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
+    public BluetoothGattCharacteristic readCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
-            return;
+            return characteristic;
         }
         mBluetoothGatt.readCharacteristic(characteristic);
+        return characteristic;
     }
 
     /**
@@ -290,13 +274,13 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
-        // This is specific to Heart Rate Measurement.
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(GattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBluetoothGatt.writeDescriptor(descriptor);
-        }
+//        // This is specific Prometeo Device Measurement.
+//        if (UUID_PROMETEO_MEASUREMENT.equals(characteristic.getUuid())) {
+//            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+//                    UUID.fromString(GattAttributes.));
+//            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//            mBluetoothGatt.writeDescriptor(descriptor);
+   //     }
     }
 
     /**
@@ -310,5 +294,12 @@ public class BluetoothLeService extends Service {
         if (mBluetoothGatt == null) return null;
 
         return mBluetoothGatt.getServices();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public BluetoothGattService getGattService(UUID uuid) {
+
+        return mBluetoothGatt.getService(uuid);
+
     }
 }

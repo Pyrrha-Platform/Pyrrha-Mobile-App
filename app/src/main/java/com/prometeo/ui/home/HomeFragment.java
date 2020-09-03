@@ -26,6 +26,7 @@ public class HomeFragment extends Fragment {
 
         final TextView valueCO = root.findViewById(R.id.valueCO);
 
+
 //        homeViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
 //            @Override
 //            public void onChanged(@Nullable String s) {

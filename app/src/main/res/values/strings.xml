@@ -37,5 +37,11 @@
     <string name="unknown_device">Unknown device</string>
     <string name="unknown_characteristic">Unknown characteristic</string>
     <string name="unknown_service">Unknown service</string>
-
+    <string name="add">Add</string>
+    <string name="scan">Scan</string>
+    <string name="temperature">Temperature</string>
+    <string name="humidity">Humidity</string>
+    <string name="co">CO</string>
+    <string name="no2">NO2</string>
+    <string name="_0">0</string>
 </resources>

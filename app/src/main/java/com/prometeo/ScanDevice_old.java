@@ -13,13 +13,10 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
-
-import com.prometeo.ui.login.LoginActivity;
 
 import java.util.ArrayList;
 
-public class ScanDevice extends AppCompatActivity {
+public class ScanDevice_old extends AppCompatActivity {
 
     ListView listDevices;
     Button buttonAddDevice;
@@ -75,7 +72,7 @@ public class ScanDevice extends AppCompatActivity {
     public void addClicked(View view) {
         Intent intent;
 
-        intent = new Intent(ScanDevice.this, MainActivity.class);
+        intent = new Intent(ScanDevice_old.this, MainActivity.class);
 
         startActivity(intent);
 

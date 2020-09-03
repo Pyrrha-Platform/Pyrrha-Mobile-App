@@ -24,7 +24,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.prometeo.DeviceScanActivity;
-import com.prometeo.ScanDevice;
 import com.prometeo.MainActivity;
 import com.prometeo.R;
 

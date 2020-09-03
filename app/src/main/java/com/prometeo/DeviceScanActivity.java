@@ -2,7 +2,6 @@ package com.prometeo;
 
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -13,16 +12,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -43,8 +36,9 @@ public class DeviceScanActivity extends AppCompatActivity {
     Button buttonAddDevice;
     Button buttonScanDevice;
 
-    ArrayList<String> bluetoothDevices = new ArrayList<>();
+    ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
     ArrayList<String> addresses = new ArrayList<>();
+    ArrayList<String> deviceNames = new ArrayList<>();
 
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -97,7 +91,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
 
         // Initializes list view adapter.
-        mLeDeviceListAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,bluetoothDevices);
+        mLeDeviceListAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,deviceNames);
 
         listDevices.setAdapter(mLeDeviceListAdapter);
         scanLeDevice(true);
@@ -178,7 +172,8 @@ public class DeviceScanActivity extends AppCompatActivity {
                                     deviceString = name;
                                 }
 
-                                bluetoothDevices.add(deviceString);
+                                bluetoothDevices.add(device);
+                                deviceNames.add(deviceString);
                                 mLeDeviceListAdapter.notifyDataSetChanged();
                             }
                         }
@@ -194,20 +189,26 @@ public class DeviceScanActivity extends AppCompatActivity {
         mLeDeviceListAdapter.clear();
         bluetoothDevices.clear();
         addresses.clear();
+        deviceNames.clear();
         scanLeDevice(true);
     }
 
     public void addClicked(View view) {
         Intent intent;
 
-        final String device = (String) mLeDeviceListAdapter.getItem(listDevices.getCheckedItemPosition());
+
+
+        final BluetoothDevice device = bluetoothDevices.get(listDevices.getCheckedItemPosition());
         if (device == null) return;
 
-        Log.i("Device Selected", "Name: " + device);
+//        Log.i("Device Selected", "Name: " + device);
 
-        intent = new Intent(DeviceScanActivity.this, MainActivity.class);
-//        intent.putExtra(MainActivity.EXTRAS_DEVICE_NAME, device.getName());
-//        intent.putExtra(MainActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+        String name = device.getName();
+        String address = device.getAddress();
+
+        intent = new Intent(DeviceScanActivity.this, DeviceDashboard.class);
+        intent.putExtra(DeviceDashboard.EXTRAS_DEVICE_NAME, device.getName());
+        intent.putExtra(DeviceDashboard.EXTRAS_DEVICE_ADDRESS, device.getAddress());
 
         startActivity(intent);
 
@@ -215,3 +216,4 @@ public class DeviceScanActivity extends AppCompatActivity {
 
 
 }
+
