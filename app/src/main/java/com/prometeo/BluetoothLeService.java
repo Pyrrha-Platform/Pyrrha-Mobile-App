@@ -53,6 +53,8 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_PROMETEO_MEASUREMENT =
             UUID.fromString(GattAttributes.PROMETEO_MEASUREMENT);
 
+    private boolean isWriting = false;
+
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -101,6 +103,14 @@ public class BluetoothLeService extends Service {
                                             BluetoothGattCharacteristic characteristic) {
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                         BluetoothGattCharacteristic characteristic,
+                                         int status) {
+            isWriting = false;
+        }
+
     };
 
     private void broadcastUpdate(final String action) {
@@ -282,6 +292,23 @@ public class BluetoothLeService extends Service {
 //            mBluetoothGatt.writeDescriptor(descriptor);
    //     }
     }
+
+    /**
+     * Writes in a characteristic.
+     *
+     * @param characteristic Characteristic to act on.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+        isWriting = true;
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return false;
+        }
+        return mBluetoothGatt.writeCharacteristic(characteristic);
+    }
+
+
 
     /**
      * Retrieves a list of supported GATT services on the connected device. This should be

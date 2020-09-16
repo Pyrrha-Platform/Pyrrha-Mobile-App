@@ -31,7 +31,7 @@ public class Constants {
     public final static String AUTH_TOKEN = "authtoken";
     public final static String DEVICE_ID = "deviceid";
     public final static String ORGANIZATION = "organization";
-    public final static String DEVICE_TYPE = "FireFighter";
+    public final static String DEVICE_TYPE = "PrometeoDevice";
 
     // IoT events and commands
     public final static String ALERT_EVENT = "alert";

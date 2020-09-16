@@ -62,7 +62,9 @@ public class HomeFragment extends Fragment {
 
             // create ActionListener to handle message published results
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
+
             IoTClient iotClient = IoTClient.getInstance(context);
+
             String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(getContext()), pe);
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
 
@@ -108,8 +110,8 @@ public class HomeFragment extends Fragment {
 
         app.setDeviceType(Constants.DEVICE_TYPE);
         app.setDeviceId("123456789");
-        app.setOrganization("k55sah");
-        app.setAuthToken("");
+        app.setOrganization("p0g2ka");
+        app.setAuthToken("_alp0VdLDkIu?ze63I");
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
 
         try {

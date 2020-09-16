@@ -11,21 +11,32 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
+import java.util.Date;
+import java.util.Calendar;
+import android.os.Handler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-import 	java.util.UUID;
+import com.prometeo.iot.IoTClient;
+import com.prometeo.ui.home.HomeFragment;
+import com.prometeo.utils.Constants;
+import com.prometeo.utils.MessageFactory;
+import com.prometeo.utils.MyIoTActionListener;
+import com.prometeo.utils.PrometeoEvent;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+
+import java.util.Random;
+import java.util.UUID;
+
+import javax.net.SocketFactory;
 
 public class DeviceDashboard extends AppCompatActivity {
 
@@ -40,6 +51,7 @@ public class DeviceDashboard extends AppCompatActivity {
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
     private BluetoothGattCharacteristic mGattCharacteristic;
+    private BluetoothGattCharacteristic mGattDateTime;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
@@ -48,6 +60,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
     private UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
     private UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
+    private UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
 
     private BluetoothGattService mGattService;
 
@@ -55,6 +68,10 @@ public class DeviceDashboard extends AppCompatActivity {
     TextView valueHumidity;
     TextView valueCO;
     TextView valueNO2;
+
+    Context context;
+    IoTStarterApplication app;
+    BroadcastReceiver iotBroadCastReceiver;
 
 
     // Code to manage Service lifecycle.
@@ -91,15 +108,18 @@ public class DeviceDashboard extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
-//                updateConnectionState(R.string.connected);
-//                invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-//                updateConnectionState(R.string.disconnected);
-//                invalidateOptionsMenu();
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                displayGattService();
+                updateDateTime();
+                Handler handler = new Handler();
+
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        displayGattService();
+                    }
+                }, 2000); // 2 segundos de "delay"             
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 displayGattService();
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
@@ -144,6 +164,61 @@ public class DeviceDashboard extends AppCompatActivity {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
+
+        context = this.getApplicationContext();
+        // connect to the IoT platform and send random readings for now
+        // how are these variables entered? How are they updated in the Application?
+        app = (IoTStarterApplication) this.getApplication();
+        app.setCurrentRunningActivity(TAG);
+
+        if (iotBroadCastReceiver == null) {
+            Log.d(TAG, ".onResume() - Registering iotBroadcastReceiver");
+            iotBroadCastReceiver = new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.d(TAG, ".onReceive() - Received intent for iotBroadcastReceiver");
+                }
+            };
+        }
+
+        this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
+                new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
+
+
+        app.setDeviceType(Constants.DEVICE_TYPE);
+        app.setDeviceId("123456789");
+        app.setOrganization("p0g2ka");
+        app.setAuthToken("_alp0VdLDkIu?ze63I");
+
+        Log.d(TAG, "We are going to create the iotClient");
+        IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
+
+        try {
+            SocketFactory factory = null;
+            // need to implement ssl here
+            Log.d(TAG, "We are going to creat the listener");
+
+            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
+            Log.d(TAG, "Listener created");
+
+            //start connection - if this method returns, connection has not yet happened
+            iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
+            Log.d(TAG, ".start connection");
+
+            // iotClient.disconnectDevice(listener);
+            Log.d(TAG, ".connectDevice finished");
+
+        } catch (MqttException e) {
+            if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
+                // error while connecting to the broker - send an intent to inform the user
+                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
+                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
+//                context.sendBroadcast(actionIntent);
+            }
+        }
+
+
     }
 
     @Override
@@ -171,9 +246,50 @@ public class DeviceDashboard extends AppCompatActivity {
         }
     }
 
+    private void sendData() {
+        try {
+            Random random = new Random();
+            // create a random PrometeoEvent
+            PrometeoEvent pe = new PrometeoEvent();
+            pe.setAcroleine(1 + random.nextFloat() * (100 - 1));
+            pe.setBenzene(1 + random.nextFloat() * (100 - 1));
+            pe.setCO(1 + random.nextFloat() * (100 - 1));
+            pe.setFormaldehyde(1 + random.nextFloat() * (100 - 1));
+            pe.setNo2(1 + random.nextFloat() * (100 - 1));
+            pe.setTemp(1 + random.nextFloat() * (100 - 1));
+            pe.setHumidity(1 + random.nextFloat() * (100 - 1));
+
+            // create ActionListener to handle message published results
+            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
+            IoTClient iotClient = IoTClient.getInstance(context);
+            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+            iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
+
+            int count = app.getPublishCount();
+            app.setPublishCount(++count);
+
+            String runningActivity = app.getCurrentRunningActivity();
+            if (runningActivity != null && runningActivity.equals(HomeFragment.class.getName())) {
+                Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
+                actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
+                context.sendBroadcast(actionIntent);
+            }
+        } catch (MqttException e) {
+            // Publish failed
+        }
+    }
+
+    public String getMacAddress(Context context) {
+        WifiManager wimanager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        String macAddress = wimanager.getConnectionInfo().getMacAddress();
+        if (macAddress == null) {
+            macAddress = "Device don't have mac address or wi-fi is disabled";
+        }
+        return macAddress;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
-
 
         mGattService = mBluetoothLeService.getGattService(uuidService);
         mGattCharacteristic = mGattService.getCharacteristic(uuidCharacteristic);
@@ -199,9 +315,24 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
 
+        sendData();
+
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void updateDateTime() {
+
+        mGattService = mBluetoothLeService.getGattService(uuidService);
+        mGattDateTime = mGattService.getCharacteristic(uuidDateTime);
+
+        if (mGattDateTime != null) {
+            Date currentTime = Calendar.getInstance().getTime();
+            mGattDateTime.setValue(currentTime.toString());
+            mBluetoothLeService.writeCharacteristic(mGattDateTime);
+        }
+
+    }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
