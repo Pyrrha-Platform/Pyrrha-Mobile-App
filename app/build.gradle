@@ -6,12 +6,13 @@ android {
 
     defaultConfig {
         applicationId "com.prometeo"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = ['appIdRedirectScheme': android.defaultConfig.applicationId]
     }
 
     buildTypes {
@@ -41,5 +42,6 @@ dependencies {
     implementation('org.eclipse.paho:org.eclipse.paho.android.service:1.0.2') {
         exclude module: 'support-v4'
     }
+    implementation 'com.github.ibm-cloud-security:appid-clientsdk-android:6.+'
 
 }

@@ -1,44 +1,71 @@
 package com.prometeo.ui.login;
 
+import android.content.Context;
 import android.util.Patterns;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.ibm.cloud.appid.android.api.AppIDAuthorizationManager;
+import com.ibm.cloud.appid.android.api.AuthorizationException;
+import com.ibm.cloud.appid.android.api.TokenResponseListener;
+import com.ibm.cloud.appid.android.api.tokens.AccessToken;
+import com.ibm.cloud.appid.android.api.tokens.IdentityToken;
+import com.ibm.cloud.appid.android.api.tokens.RefreshToken;
 import com.prometeo.R;
+import com.prometeo.login.LoginDataSource;
 import com.prometeo.login.LoginRepository;
-import com.prometeo.login.Result;
-import com.prometeo.login.model.LoggedInUser;
+import com.ibm.cloud.appid.android.api.AppID;
+
+
 
 public class LoginViewModel extends ViewModel {
+    private final static String TAG = LoginDataSource.class.getName();
+    private final static String region = AppID.REGION_UK;
+    private final static String authTenantId = "2e5771a5-80bf-4879-bbf9-d5135ccde03a";
+
+    private AppID appId;
+    private AppIDAuthorizationManager appIDAuthorizationManager;
+
 
     private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
     private LoginRepository loginRepository;
+    private Context mcontext;
 
-    LoginViewModel(LoginRepository loginRepository) {
+    LoginViewModel(LoginRepository loginRepository, Context context) {
         this.loginRepository = loginRepository;
+        this.mcontext = context;
+
     }
 
     LiveData<LoginFormState> getLoginFormState() {
         return loginFormState;
     }
 
-    LiveData<LoginResult> getLoginResult() {
+    public LiveData<LoginResult> getLoginResult() {
         return loginResult;
     }
 
     public void login(String username, String password) {
-        // can be launched in a separate asynchronous job
-        Result<LoggedInUser> result = loginRepository.login(username, password);
+        this.appId = AppID.getInstance();
+        appId.initialize(this.mcontext, authTenantId, region);
+        this.appIDAuthorizationManager = new AppIDAuthorizationManager(this.appId);
+        this.appId.getInstance().signinWithResourceOwnerPassword(this.mcontext, username, password, new TokenResponseListener() {
+            @Override
+            public void onAuthorizationFailure (AuthorizationException exception) {
+                //Exception occurred
+                loginResult.postValue(new LoginResult(R.string.login_failed));
+            }
 
-        if (result instanceof Result.Success) {
-            LoggedInUser data = ((Result.Success<LoggedInUser>) result).getData();
-            loginResult.setValue(new LoginResult(new LoggedInUserView(data.getDisplayName())));
-        } else {
-            loginResult.setValue(new LoginResult(R.string.login_failed));
-        }
+            @Override
+            public void onAuthorizationSuccess (AccessToken accessToken, IdentityToken identityToken, RefreshToken refreshToken) {
+                //User authenticated
+                loginResult.postValue(new LoginResult(new LoggedInUserView(identityToken.getName())));
+            }
+        });
+
     }
 
     public void loginDataChanged(String username, String password) {
