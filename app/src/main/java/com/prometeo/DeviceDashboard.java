@@ -52,6 +52,7 @@ public class DeviceDashboard extends AppCompatActivity {
     private BluetoothLeService mBluetoothLeService;
     private BluetoothGattCharacteristic mGattCharacteristic;
     private BluetoothGattCharacteristic mGattDateTime;
+    private BluetoothGattCharacteristic mGattStatusCloud;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
@@ -61,6 +62,7 @@ public class DeviceDashboard extends AppCompatActivity {
     private UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
     private UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
     private UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
+    private UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
 
     private BluetoothGattService mGattService;
 
@@ -113,16 +115,40 @@ public class DeviceDashboard extends AppCompatActivity {
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
-                Handler handler = new Handler();
+                Handler handler1 = new Handler();
+                Handler handler2 = new Handler();
 
-                handler.postDelayed(new Runnable() {
+                handler1.postDelayed(new Runnable() {
                     public void run() {
                         displayGattService();
                     }
-                }, 2000); // 2 segundos de "delay"             
+                }, 10000); // 10 seconds of "delay"
+
+                handler2.postDelayed(new Runnable() {
+                    public void run() {
+                        updateStatusCloud();
+                    }
+                }, 15000); // 15 seconds of "delay"
+
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayGattService();
+
+                Handler handler1 = new Handler();
+                Handler handler2 = new Handler();
+
+                handler1.postDelayed(new Runnable() {
+                    public void run() {
+                        displayGattService();
+                    }
+                }, 10000); // 10 seconds of "delay"
+
+                handler2.postDelayed(new Runnable() {
+                    public void run() {
+                        updateStatusCloud();
+                    }
+                }, 15000); // 15 seconds of "delay"
+
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+
             }
         }
     };
@@ -194,29 +220,29 @@ public class DeviceDashboard extends AppCompatActivity {
         Log.d(TAG, "We are going to create the iotClient");
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
 
-        try {
-            SocketFactory factory = null;
-            // need to implement ssl here
-            Log.d(TAG, "We are going to creat the listener");
+//        try {
+//            SocketFactory factory = null;
+//            // need to implement ssl here
+//            Log.d(TAG, "We are going to creat the listener");
 
-            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
-            Log.d(TAG, "Listener created");
+//            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
+//            Log.d(TAG, "Listener created");
 
             //start connection - if this method returns, connection has not yet happened
-            iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
-            Log.d(TAG, ".start connection");
+//            iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
+//            Log.d(TAG, ".start connection");
 
-            // iotClient.disconnectDevice(listener);
-            Log.d(TAG, ".connectDevice finished");
+//            // iotClient.disconnectDevice(listener);
+//            Log.d(TAG, ".connectDevice finished");
 
-        } catch (MqttException e) {
-            if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
+//        } catch (MqttException e) {
+//            if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
                 // error while connecting to the broker - send an intent to inform the user
-                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
-                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
+//                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
+//                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
 //                context.sendBroadcast(actionIntent);
-            }
-        }
+//            }
+//        }
 
 
     }
@@ -291,8 +317,8 @@ public class DeviceDashboard extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
 
-        mGattService = mBluetoothLeService.getGattService(uuidService);
-        mGattCharacteristic = mGattService.getCharacteristic(uuidCharacteristic);
+//        mGattService = mBluetoothLeService.getGattService(uuidService);
+        mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
 
         if (mGattCharacteristic != null) {
             final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
@@ -315,7 +341,7 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
 
-        sendData();
+//        sendData();
 
 
     }
@@ -323,13 +349,37 @@ public class DeviceDashboard extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void updateDateTime() {
 
-        mGattService = mBluetoothLeService.getGattService(uuidService);
-        mGattDateTime = mGattService.getCharacteristic(uuidDateTime);
+//        mGattService = mBluetoothLeService.getGattService(uuidService);
+        mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
 
         if (mGattDateTime != null) {
             Date currentTime = Calendar.getInstance().getTime();
             mGattDateTime.setValue(currentTime.toString());
             mBluetoothLeService.writeCharacteristic(mGattDateTime);
+        }
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void updateStatusCloud() {
+
+//        mGattService = mBluetoothLeService.getGattService(uuidService);
+        mGattStatusCloud = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidStatusCloud);
+
+        String[] status_choices = new String[3];
+        Random ga = new Random();
+
+        status_choices[0] = "3";   // red
+        status_choices[1] = "2";    // yellow
+        status_choices[2] = "1";    // green
+
+        int random_number = ga.nextInt(3);
+
+        String status_choice = status_choices[random_number];
+
+        if (mGattStatusCloud != null) {
+            mGattStatusCloud.setValue(status_choice);
+            mBluetoothLeService.writeCharacteristic(mGattStatusCloud);
         }
 
     }
