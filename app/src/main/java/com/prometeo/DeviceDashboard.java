@@ -24,6 +24,10 @@ import java.util.Calendar;
 import android.os.Handler;
 
 
+import com.prometeo.io.RetrofitAdapter;
+import com.prometeo.io.RetrofitService;
+import com.prometeo.io.StatusCloud;
+import com.prometeo.io.StatusCloud;
 import com.prometeo.iot.IoTClient;
 import com.prometeo.ui.home.HomeFragment;
 import com.prometeo.utils.Constants;
@@ -37,6 +41,12 @@ import java.util.Random;
 import java.util.UUID;
 
 import javax.net.SocketFactory;
+
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class DeviceDashboard extends AppCompatActivity {
 
@@ -75,6 +85,9 @@ public class DeviceDashboard extends AppCompatActivity {
     IoTStarterApplication app;
     BroadcastReceiver iotBroadCastReceiver;
 
+    Call<StatusCloud> callStatus;
+    Retrofit retrofit;
+    RetrofitService retrofitService;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -115,37 +128,24 @@ public class DeviceDashboard extends AppCompatActivity {
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
-                Handler handler1 = new Handler();
-                Handler handler2 = new Handler();
+                Handler handler = new Handler();
 
-                handler1.postDelayed(new Runnable() {
+                handler.postDelayed(new Runnable() {
                     public void run() {
                         displayGattService();
                     }
                 }, 10000); // 10 seconds of "delay"
 
-                handler2.postDelayed(new Runnable() {
-                    public void run() {
-                        updateStatusCloud();
-                    }
-                }, 15000); // 15 seconds of "delay"
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 
-                Handler handler1 = new Handler();
-                Handler handler2 = new Handler();
+                Handler handler = new Handler();
 
-                handler1.postDelayed(new Runnable() {
+                handler.postDelayed(new Runnable() {
                     public void run() {
                         displayGattService();
                     }
                 }, 10000); // 10 seconds of "delay"
-
-                handler2.postDelayed(new Runnable() {
-                    public void run() {
-                        updateStatusCloud();
-                    }
-                }, 15000); // 15 seconds of "delay"
 
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
 
@@ -244,13 +244,17 @@ public class DeviceDashboard extends AppCompatActivity {
 //            }
 //        }
 
+        // We use retrofit to call the api res
+        retrofit = new RetrofitAdapter().getAdapter();
+        retrofitService = retrofit.create(RetrofitService.class);
+
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
+//        unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
@@ -271,6 +275,40 @@ public class DeviceDashboard extends AppCompatActivity {
 
         }
     }
+
+    private void getStatus() {
+        callStatus = retrofitService.get_status("0012", "2000-01-01+09:32:00");
+        Log.d(TAG, "callStatus created");
+        callStatus.enqueue(new Callback<StatusCloud>() {
+            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+            @Override
+            public void onResponse(Call<StatusCloud> callStatus, Response<StatusCloud> response) {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "Error when calling to get_status: "+response.code());
+                    return;
+                }
+                else {
+                    System.out.println(response.body().getFirefighter_id());
+                    System.out.println(response.body().getStatus());
+                    System.out.println(response.body().getTimestamp_mins());
+
+                    updateStatusCloud(response.body().getStatus());
+
+                    Log.d(TAG, "ha ido bien");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<StatusCloud> callStatus, Throwable t) {
+                System.out.println(t.getCause().toString());
+                Log.d(TAG, "ha fallado");
+            }
+        });
+
+
+    }
+
 
     private void sendData() {
         try {
@@ -343,6 +381,8 @@ public class DeviceDashboard extends AppCompatActivity {
 
 //        sendData();
 
+        getStatus();
+
 
     }
 
@@ -361,24 +401,27 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void updateStatusCloud() {
+    private void updateStatusCloud(Integer status_choice) {
 
 //        mGattService = mBluetoothLeService.getGattService(uuidService);
         mGattStatusCloud = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidStatusCloud);
 
-        String[] status_choices = new String[3];
-        Random ga = new Random();
 
-        status_choices[0] = "3";   // red
-        status_choices[1] = "2";    // yellow
-        status_choices[2] = "1";    // green
+        if (status_choice == -1) {
+            Integer[] status_choices = new Integer[3];
+            Random ga = new Random();
 
-        int random_number = ga.nextInt(3);
+            status_choices[0] = 3;   // red
+            status_choices[1] = 2;    // yellow
+            status_choices[2] = 1;    // green
 
-        String status_choice = status_choices[random_number];
+            int random_number = ga.nextInt(3);
 
+            status_choice = status_choices[random_number];
+
+        }
         if (mGattStatusCloud != null) {
-            mGattStatusCloud.setValue(status_choice);
+            mGattStatusCloud.setValue(status_choice.toString());
             mBluetoothLeService.writeCharacteristic(mGattStatusCloud);
         }
 
