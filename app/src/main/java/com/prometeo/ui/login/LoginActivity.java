@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
+        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory(this))
                 .get(LoginViewModel.class);
 
         final EditText usernameEditText = findViewById(R.id.username);
@@ -70,23 +70,25 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 if (loginResult.getSuccess() != null) {
                     updateUiWithUser(loginResult.getSuccess());
+
+                    setResult(Activity.RESULT_OK);
+
+                    //Complete and destroy login activity once successful
+                    //finish();
+
+                    // We go to the main activity after the login
+                    // We use the bluetooth checkbox only for testing purpose
+                    Intent intent;
+
+                    if (bluetoothDevice.isChecked()) {
+                        intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
+                    } else {
+                        intent = new Intent(LoginActivity.this, MainActivity.class);
+                    }
+
+                    startActivity(intent);
                 }
-                setResult(Activity.RESULT_OK);
 
-                //Complete and destroy login activity once successful
-                //finish();
-
-                // We go to the main activity after the login
-                // We use the bluetooth checkbox only for testing purpose
-                Intent intent;
-
-                if (bluetoothDevice.isChecked()) {
-                    intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
-                } else {
-                    intent = new Intent(LoginActivity.this, MainActivity.class);
-                }
-
-                startActivity(intent);
             }
         });
 
@@ -132,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void updateUiWithUser(LoggedInUserView model) {
-        String welcome = getString(R.string.welcome) + model.getDisplayName();
+        String welcome = getString(R.string.welcome) + " " + model.getDisplayName();
         // TODO : initiate successful logged in experience
         Toast.makeText(getApplicationContext(), welcome, Toast.LENGTH_LONG).show();
     }
