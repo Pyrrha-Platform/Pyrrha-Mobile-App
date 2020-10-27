@@ -47,6 +47,12 @@ dependencies {
     // We need this dependency for the api res call
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.0'
 
+}
+
+android{
+    configurations {
+        compile.exclude group: 'org.jetbrains' , module:'annotations-java5'
+    }
 }

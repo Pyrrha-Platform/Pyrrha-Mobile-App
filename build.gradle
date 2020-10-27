@@ -12,6 +12,11 @@ buildscript {
     }
 }
 
+configurations {
+    cleanedAnnotations
+    compile.exclude group: 'org.jetbrains' , module:'annotations'
+}
+
 allprojects {
     repositories {
         google()
@@ -23,3 +28,4 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
