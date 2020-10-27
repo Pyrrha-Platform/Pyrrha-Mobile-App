@@ -109,9 +109,11 @@ public class HomeFragment extends Fragment {
 
 
         app.setDeviceType(Constants.DEVICE_TYPE);
-        app.setDeviceId("123456789");
+        app.setDeviceId("Prometeo0001");
         app.setOrganization("p0g2ka");
-        app.setAuthToken("_alp0VdLDkIu?ze63I");
+        app.setAuthToken("t4fp!ZEQNFDyzJ*&n_");
+
+
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
 
         try {

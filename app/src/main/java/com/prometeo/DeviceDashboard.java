@@ -213,36 +213,36 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         app.setDeviceType(Constants.DEVICE_TYPE);
-        app.setDeviceId("123456789");
+        app.setDeviceId("Prometeo0001");
         app.setOrganization("p0g2ka");
-        app.setAuthToken("_alp0VdLDkIu?ze63I");
+        app.setAuthToken("t4fp!ZEQNFDyzJ*&n_");
 
         Log.d(TAG, "We are going to create the iotClient");
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
 
-//        try {
-//            SocketFactory factory = null;
-//            // need to implement ssl here
-//            Log.d(TAG, "We are going to creat the listener");
+        try {
+            SocketFactory factory = null;
+            // need to implement ssl here
+            Log.d(TAG, "We are going to creat the listener");
 
-//            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
-//            Log.d(TAG, "Listener created");
+            MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
+            Log.d(TAG, "Listener created");
 
             //start connection - if this method returns, connection has not yet happened
-//            iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
-//            Log.d(TAG, ".start connection");
+            iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
+            Log.d(TAG, ".start connection");
 
-//            // iotClient.disconnectDevice(listener);
-//            Log.d(TAG, ".connectDevice finished");
+            // iotClient.disconnectDevice(listener);
+            Log.d(TAG, ".connectDevice finished");
 
-//        } catch (MqttException e) {
-//            if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
+        } catch (MqttException e) {
+            if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
                 // error while connecting to the broker - send an intent to inform the user
-//                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
-//                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
-//                context.sendBroadcast(actionIntent);
-//            }
-//        }
+                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
+                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
+                context.sendBroadcast(actionIntent);
+            }
+        }
 
         // We use retrofit to call the api res
         retrofit = new RetrofitAdapter().getAdapter();
@@ -379,7 +379,7 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
 
-//        sendData();
+        sendData();
 
         getStatus();
 
