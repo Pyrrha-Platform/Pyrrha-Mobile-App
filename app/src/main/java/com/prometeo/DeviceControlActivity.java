@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ExpandableListView;
@@ -21,6 +20,9 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
+
+import com.prometeo.ble.BluetoothLeService;
+import com.prometeo.ble.GattAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,18 +175,18 @@ public class DeviceControlActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
-    }
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        unregisterReceiver(mGattUpdateReceiver);
+//    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(mServiceConnection);
-        mBluetoothLeService = null;
-    }
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        unbindService(mServiceConnection);
+//        mBluetoothLeService = null;
+//    }
 
 
     @Override
