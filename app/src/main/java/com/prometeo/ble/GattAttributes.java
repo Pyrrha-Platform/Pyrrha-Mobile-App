@@ -1,4 +1,4 @@
-package com.prometeo;
+package com.prometeo.ble;
 
 import java.util.HashMap;
 

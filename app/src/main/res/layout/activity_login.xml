@@ -76,21 +76,4 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.3" />
 
-    <CheckBox
-        android:id="@+id/bluetoothDevice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="126dp"
-        android:layout_marginLeft="126dp"
-        android:layout_marginTop="48dp"
-        android:layout_marginEnd="112dp"
-        android:layout_marginRight="112dp"
-        android:layout_marginBottom="22dp"
-        android:checked="false"
-        android:text="Bluetooth Device"
-        app:layout_constraintBottom_toTopOf="@+id/login"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/password" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

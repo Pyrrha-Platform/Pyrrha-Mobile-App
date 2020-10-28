@@ -24,12 +24,11 @@ import java.util.Calendar;
 import android.os.Handler;
 
 
+import com.prometeo.ble.BluetoothLeService;
 import com.prometeo.io.RetrofitAdapter;
 import com.prometeo.io.RetrofitService;
 import com.prometeo.io.StatusCloud;
-import com.prometeo.io.StatusCloud;
 import com.prometeo.iot.IoTClient;
-import com.prometeo.ui.home.HomeFragment;
 import com.prometeo.utils.Constants;
 import com.prometeo.utils.MessageFactory;
 import com.prometeo.utils.MyIoTActionListener;
@@ -54,10 +53,12 @@ public class DeviceDashboard extends AppCompatActivity {
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    public static final String USER_ID = "USER_ID";
 
     private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
+    private String user_id;
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
     private BluetoothGattCharacteristic mGattCharacteristic;
@@ -167,6 +168,7 @@ public class DeviceDashboard extends AppCompatActivity {
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+        user_id = intent.getStringExtra(USER_ID);
 
 
         valueTemperature = findViewById(R.id.valueTemperature);
@@ -213,9 +215,9 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         app.setDeviceType(Constants.DEVICE_TYPE);
-        app.setDeviceId("Prometeo0001");
+        app.setDeviceId(user_id.replace("@", "-"));
         app.setOrganization("p0g2ka");
-        app.setAuthToken("t4fp!ZEQNFDyzJ*&n_");
+        app.setAuthToken("prometeopriegoholaquetal");
 
         Log.d(TAG, "We are going to create the iotClient");
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
@@ -251,33 +253,42 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
 //        unregisterReceiver(mGattUpdateReceiver);
-    }
+//    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(mServiceConnection);
-        mBluetoothLeService = null;
-    }
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        unbindService(mServiceConnection);
+//        mBluetoothLeService = null;
+//    }
 
 
     private void displayData(String data) {
         if (data != null) {
+
+            // We display the data in the mobile screen
             String[] parts = data.split(" ");
             valueTemperature.setText(parts[0]);
             valueHumidity.setText(parts[1]);
             valueCO.setText(parts[2]);
             valueNO2.setText(parts[3]);
 
+            // We send the data to the cloud through IOT Platform
+            sendData(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
+
+            // We get the status from the cloud
+            getStatus();
+
         }
+
     }
 
     private void getStatus() {
-        callStatus = retrofitService.get_status("0012", "2000-01-01+09:32:00");
+        callStatus = retrofitService.get_status(user_id, Calendar.getInstance().getTime().toString());
         Log.d(TAG, "callStatus created");
         callStatus.enqueue(new Callback<StatusCloud>() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -310,18 +321,18 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
 
-    private void sendData() {
+    private void sendData(float temperature, float humidity, float co, float no2) {
         try {
             Random random = new Random();
             // create a random PrometeoEvent
             PrometeoEvent pe = new PrometeoEvent();
-            pe.setAcroleine(1 + random.nextFloat() * (100 - 1));
-            pe.setBenzene(1 + random.nextFloat() * (100 - 1));
-            pe.setCO(1 + random.nextFloat() * (100 - 1));
-            pe.setFormaldehyde(1 + random.nextFloat() * (100 - 1));
-            pe.setNo2(1 + random.nextFloat() * (100 - 1));
-            pe.setTemp(1 + random.nextFloat() * (100 - 1));
-            pe.setHumidity(1 + random.nextFloat() * (100 - 1));
+            pe.setAcroleine((float) 0.0);
+            pe.setBenzene((float) 0.0);
+            pe.setCO(co);
+            pe.setFormaldehyde((float) 0.0);
+            pe.setNo2(no2);
+            pe.setTemp(temperature);
+            pe.setHumidity(humidity);
 
             // create ActionListener to handle message published results
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
@@ -333,7 +344,7 @@ public class DeviceDashboard extends AppCompatActivity {
             app.setPublishCount(++count);
 
             String runningActivity = app.getCurrentRunningActivity();
-            if (runningActivity != null && runningActivity.equals(HomeFragment.class.getName())) {
+            if (runningActivity != null && runningActivity.equals(this.getClass().getName())) {
                 Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
                 actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
                 context.sendBroadcast(actionIntent);
@@ -379,11 +390,6 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
 
-        sendData();
-
-        getStatus();
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -408,16 +414,18 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         if (status_choice == -1) {
-            Integer[] status_choices = new Integer[3];
-            Random ga = new Random();
+//            Integer[] status_choices = new Integer[3];
+//            Random ga = new Random();
 
-            status_choices[0] = 3;   // red
-            status_choices[1] = 2;    // yellow
-            status_choices[2] = 1;    // green
+//            status_choices[0] = 3;   // red
+//            status_choices[1] = 2;    // yellow
+//            status_choices[2] = 1;    // green
 
-            int random_number = ga.nextInt(3);
+//            int random_number = ga.nextInt(3);
 
-            status_choice = status_choices[random_number];
+//            status_choice = status_choices[random_number];
+
+            status_choice = 3;  // red
 
         }
         if (mGattStatusCloud != null) {

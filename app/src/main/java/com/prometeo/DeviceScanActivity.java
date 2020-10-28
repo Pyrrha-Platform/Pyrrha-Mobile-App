@@ -27,6 +27,8 @@ import java.util.ArrayList;
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
 public class DeviceScanActivity extends AppCompatActivity {
+    public static final String USER_ID = "USER_ID";
+
     private ArrayAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
@@ -35,6 +37,8 @@ public class DeviceScanActivity extends AppCompatActivity {
     ListView listDevices;
     Button buttonAddDevice;
     Button buttonScanDevice;
+
+    private String user_id;
 
     ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
     ArrayList<String> addresses = new ArrayList<>();
@@ -52,9 +56,14 @@ public class DeviceScanActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scan_device);
         mHandler = new Handler();
 
+        final Intent intent = getIntent();
+
+        user_id = intent.getStringExtra(USER_ID);
+
         listDevices = findViewById(R.id.listDevices);
         buttonScanDevice = findViewById(R.id.buttonScanDevice);
         buttonAddDevice = findViewById(R.id.buttonAddDevice);
+
 
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -107,13 +116,11 @@ public class DeviceScanActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @Override
-    protected void onPause() {
-        super.onPause();
-        scanLeDevice(false);
-        mLeDeviceListAdapter.clear();
-    }
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -162,19 +169,13 @@ public class DeviceScanActivity extends AppCompatActivity {
                             String address = device.getAddress();
 
                             Log.i("Device Found", "Name: " + name + " Address: " + address);
-
-                            if (!addresses.contains(address)) {
-                                addresses.add(address);
-                                String deviceString = "";
-                                if (name == null || name.equals("")) {
-                                    deviceString = address;
-                                } else {
-                                    deviceString = name;
+                            if (!addresses.contains(address) & name!=null) {
+                                if (name.indexOf("Prometeo") != -1) {
+                                    addresses.add(address);
+                                    bluetoothDevices.add(device);
+                                    deviceNames.add(name);
+                                    mLeDeviceListAdapter.notifyDataSetChanged();
                                 }
-
-                                bluetoothDevices.add(device);
-                                deviceNames.add(deviceString);
-                                mLeDeviceListAdapter.notifyDataSetChanged();
                             }
                         }
                     });
@@ -186,7 +187,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     public void scanClicked(View view) {
         buttonScanDevice.setEnabled(false);
         buttonAddDevice.setEnabled(false);
-        mLeDeviceListAdapter.clear();
+//        mLeDeviceListAdapter.clear();
         bluetoothDevices.clear();
         addresses.clear();
         deviceNames.clear();
@@ -209,6 +210,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         intent = new Intent(DeviceScanActivity.this, DeviceDashboard.class);
         intent.putExtra(DeviceDashboard.EXTRAS_DEVICE_NAME, device.getName());
         intent.putExtra(DeviceDashboard.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+        intent.putExtra(DeviceDashboard.USER_ID, user_id);
 
         startActivity(intent);
 

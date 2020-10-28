@@ -9,7 +9,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -21,8 +20,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.prometeo.DeviceDashboard;
 import com.prometeo.DeviceScanActivity;
-import com.prometeo.MainActivity;
 import com.prometeo.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -40,7 +39,6 @@ public class LoginActivity extends AppCompatActivity {
         final EditText passwordEditText = findViewById(R.id.password);
         final Button loginButton = findViewById(R.id.login);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
-        final CheckBox bluetoothDevice = findViewById((R.id.bluetoothDevice));
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
             @Override
@@ -80,11 +78,10 @@ public class LoginActivity extends AppCompatActivity {
                     // We use the bluetooth checkbox only for testing purpose
                     Intent intent;
 
-                    if (bluetoothDevice.isChecked()) {
-                        intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
-                    } else {
-                        intent = new Intent(LoginActivity.this, MainActivity.class);
-                    }
+                    intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
+                    String P;
+                    P = usernameEditText.getText().toString();
+                    intent.putExtra(DeviceScanActivity.USER_ID, usernameEditText.getText().toString());
 
                     startActivity(intent);
                 }
