@@ -1,8 +1,5 @@
 package com.prometeo;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -14,15 +11,17 @@ import android.content.ServiceConnection;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
-import java.util.Date;
-import java.util.Calendar;
-import android.os.Handler;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.prometeo.ble.BluetoothLeService;
 import com.prometeo.io.RetrofitAdapter;
@@ -36,11 +35,12 @@ import com.prometeo.utils.PrometeoEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
 import javax.net.SocketFactory;
-
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -77,10 +77,10 @@ public class DeviceDashboard extends AppCompatActivity {
 
     private BluetoothGattService mGattService;
 
-    TextView valueTemperature;
-    TextView valueHumidity;
-    TextView valueCO;
-    TextView valueNO2;
+    Button valueTemperature;
+    Button valueHumidity;
+    Button valueCO;
+    Button valueNO2;
 
     Context context;
     IoTStarterApplication app;
@@ -171,10 +171,10 @@ public class DeviceDashboard extends AppCompatActivity {
         user_id = intent.getStringExtra(USER_ID);
 
 
-        valueTemperature = findViewById(R.id.valueTemperature);
-        valueHumidity = findViewById(R.id.valueHumidity);
-        valueCO = findViewById(R.id.valueCO);
-        valueNO2 = findViewById(R.id.valueNO2);
+        valueTemperature = findViewById(R.id.btTemperature);
+        valueHumidity = findViewById(R.id.btHumidity);
+        valueCO = findViewById(R.id.btCO);
+        valueNO2 = findViewById(R.id.btNO2);
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
@@ -272,10 +272,10 @@ public class DeviceDashboard extends AppCompatActivity {
 
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
-            valueTemperature.setText(parts[0]);
-            valueHumidity.setText(parts[1]);
-            valueCO.setText(parts[2]);
-            valueNO2.setText(parts[3]);
+            valueTemperature.setText(parts[0]+"\n celsius");
+            valueHumidity.setText(parts[1]+"\n %");
+            valueCO.setText(parts[2]+"\n ppm");
+            valueNO2.setText(parts[3]+"\n ppm");
 
             // We send the data to the cloud through IOT Platform
             sendData(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
@@ -288,7 +288,7 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
     private void getStatus() {
-        callStatus = retrofitService.get_status(user_id, Calendar.getInstance().getTime().toString());
+        callStatus = retrofitService.get_status(user_id, Calendar.getInstance().getTime().toString()); // TO-DO: timestamp of the device
         Log.d(TAG, "callStatus created");
         callStatus.enqueue(new Callback<StatusCloud>() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -338,6 +338,21 @@ public class DeviceDashboard extends AppCompatActivity {
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
             IoTClient iotClient = IoTClient.getInstance(context);
             String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+
+
+//            messageData = "{\"firefighter_id\": \"4fba5700ofifkf4404949499\"," +
+//                    "\"device_id\": \"Prometeo93930293kdf0203\"," +
+//                    "\"device_battery_level\": \"0\"," +
+//                    "\"temperature\": 18.0," +
+//                    "\"humidity\": 69.0," +
+//                    "\"carbon_monoxide\": 2.0," +
+//                    "\"nitrogen_dioxide\": 10.01," +
+//                    "\"formaldehyde\": 23.22," +
+//                    "\"acrolein\": 12," +
+//                    "\"benzene\": 1.5," +
+//                    "\"device_timestamp\": \"2020-09-10 09:32:38\"}"; //utc time
+
+
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
 
             int count = app.getPublishCount();
@@ -399,7 +414,7 @@ public class DeviceDashboard extends AppCompatActivity {
         mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
 
         if (mGattDateTime != null) {
-            Date currentTime = Calendar.getInstance().getTime();
+            Date currentTime = Calendar.getInstance().getTime(); // convert into utc
             mGattDateTime.setValue(currentTime.toString());
             mBluetoothLeService.writeCharacteristic(mGattDateTime);
         }
@@ -442,5 +457,17 @@ public class DeviceDashboard extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         return intentFilter;
+    }
+
+
+
+    public void scanClicked(View view) {
+        Intent intent;
+
+        intent = new Intent(DeviceDashboard.this, DeviceScanActivity.class);
+        intent.putExtra(DeviceScanActivity.USER_ID, user_id);
+
+        startActivity(intent);
+
     }
 }

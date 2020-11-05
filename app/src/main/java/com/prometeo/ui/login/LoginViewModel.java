@@ -63,6 +63,7 @@ public class LoginViewModel extends ViewModel {
             public void onAuthorizationSuccess (AccessToken accessToken, IdentityToken identityToken, RefreshToken refreshToken) {
                 //User authenticated
                 loginResult.postValue(new LoginResult(new LoggedInUserView(identityToken.getName())));
+
             }
         });
 
