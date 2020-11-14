@@ -79,9 +79,7 @@ public class LoginActivity extends AppCompatActivity {
                     Intent intent;
 
                     intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
-                    String P;
-                    P = usernameEditText.getText().toString();
-                    intent.putExtra(DeviceScanActivity.USER_ID, usernameEditText.getText().toString());
+                    intent.putExtra(DeviceScanActivity.USER_ID, loginResult.getSuccess().getUserToken());
 
                     startActivity(intent);
                 }

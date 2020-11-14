@@ -1,5 +1,6 @@
 package com.prometeo;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -35,9 +36,10 @@ import com.prometeo.utils.PrometeoEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.net.SocketFactory;
@@ -118,6 +120,7 @@ public class DeviceDashboard extends AppCompatActivity {
     // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
     //                        or notification operations.
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @SuppressLint("NewApi")
         @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -266,29 +269,75 @@ public class DeviceDashboard extends AppCompatActivity {
 //        mBluetoothLeService = null;
 //    }
 
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void displayData(String data) {
         if (data != null) {
 
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
+
+            // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[0]+"\n celsius");
-            valueHumidity.setText(parts[1]+"\n %");
-            valueCO.setText(parts[2]+"\n ppm");
-            valueNO2.setText(parts[3]+"\n ppm");
+            valueHumidity.setText(parts[2]+"\n %");
+            valueCO.setText(parts[4]+"\n ppm");
+//            valueNO2.setText(parts[6]+"\n ppm");
+            valueNO2.setText("0.00 \n ppm");
+
+            final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+            f.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            Date device_timestamp = new Date();
+
+            // create a random PrometeoEvent
+            PrometeoEvent pe = new PrometeoEvent();
+//            pe.setFirefighter_id("9876");
+//            pe.setDevice_id("0002");
+            pe.setFirefighter_id(user_id);
+            pe.setDevice_id(mDeviceName);
+            pe.setDevice_battery_level("0");
+            pe.setAcrolein((float) 0.0);
+            pe.setBenzene((float) 0.0);
+            pe.setCarbon_monoxide(Float.parseFloat(parts[4]));
+            pe.setFormaldehyde((float) 0.0);
+//            pe.setNitrogen_dioxide(Float.parseFloat(parts[6]));
+            pe.setNitrogen_dioxide((float) 0.0);
+            pe.setTemperature(Float.parseFloat(parts[0]));
+            pe.setHumidity(Float.parseFloat(parts[2]));
+            pe.setDevice_timestamp(f.format(device_timestamp));
+
 
             // We send the data to the cloud through IOT Platform
-            sendData(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
+            sendData(pe, device_timestamp);
 
             // We get the status from the cloud
-            getStatus();
+            getStatus(pe, device_timestamp);
 
         }
 
     }
 
-    private void getStatus() {
-        callStatus = retrofitService.get_status(user_id, Calendar.getInstance().getTime().toString()); // TO-DO: timestamp of the device
+    private Date addMinutes(Date date, int amount){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.MINUTE, amount);
+
+        return calendar.getTime();
+    }
+
+    private void getStatus(PrometeoEvent pe, Date device_timestamp) {
+
+        final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm"); // it has to be without the seconds
+
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+
+//        callStatus = retrofitService.get_status(user_id, f.format(new Date())); // TO-DO: timestamp of the device
+//        callStatus = retrofitService.get_status("1999", f.format(new Date()).toString()+":00"); // TO-DO: timestamp of the device
+        callStatus = retrofitService.get_status(pe.getFirefighter_id(), f.format(addMinutes(device_timestamp, -2))+":00");
+//        callStatus = retrofitService.get_status(pe.getFirefighter_id(), "2020-11-13 00:21:00"); // TO-DO: timestamp of the device
+
+
         Log.d(TAG, "callStatus created");
         callStatus.enqueue(new Callback<StatusCloud>() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -312,8 +361,8 @@ public class DeviceDashboard extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusCloud> callStatus, Throwable t) {
-                System.out.println(t.getCause().toString());
-                Log.d(TAG, "ha fallado");
+                if (t.getCause()!=null)
+                    System.out.println(t.getCause().toString());
             }
         });
 
@@ -321,36 +370,20 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
 
-    private void sendData(float temperature, float humidity, float co, float no2) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void sendData(PrometeoEvent pe, Date device_timestamp) {
         try {
-            Random random = new Random();
-            // create a random PrometeoEvent
-            PrometeoEvent pe = new PrometeoEvent();
-            pe.setAcroleine((float) 0.0);
-            pe.setBenzene((float) 0.0);
-            pe.setCO(co);
-            pe.setFormaldehyde((float) 0.0);
-            pe.setNo2(no2);
-            pe.setTemp(temperature);
-            pe.setHumidity(humidity);
+
 
             // create ActionListener to handle message published results
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
             IoTClient iotClient = IoTClient.getInstance(context);
-            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+//            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+            String messageData = MessageFactory.getPrometeoDeviceMessage(pe);
 
 
-//            messageData = "{\"firefighter_id\": \"4fba5700ofifkf4404949499\"," +
-//                    "\"device_id\": \"Prometeo93930293kdf0203\"," +
-//                    "\"device_battery_level\": \"0\"," +
-//                    "\"temperature\": 18.0," +
-//                    "\"humidity\": 69.0," +
-//                    "\"carbon_monoxide\": 2.0," +
-//                    "\"nitrogen_dioxide\": 10.01," +
-//                    "\"formaldehyde\": 23.22," +
-//                    "\"acrolein\": 12," +
-//                    "\"benzene\": 1.5," +
-//                    "\"device_timestamp\": \"2020-09-10 09:32:38\"}"; //utc time
+            System.out.println("Estamos en el sitio");
+            System.out.println(messageData.toString());
 
 
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
@@ -365,7 +398,7 @@ public class DeviceDashboard extends AppCompatActivity {
                 context.sendBroadcast(actionIntent);
             }
         } catch (MqttException e) {
-            // Publish failed
+            e.printStackTrace();
         }
     }
 

@@ -5,13 +5,20 @@ package com.prometeo.ui.login;
  */
 class LoggedInUserView {
     private String displayName;
+    private String userToken;
     //... other data fields that may be accessible to the UI
 
-    LoggedInUserView(String displayName) {
+    LoggedInUserView(String displayName, String userToken) {
         this.displayName = displayName;
+        this.userToken = userToken;
     }
 
     String getDisplayName() {
         return displayName;
     }
+
+    String getUserToken() {
+        return userToken;
+    }
+
 }
