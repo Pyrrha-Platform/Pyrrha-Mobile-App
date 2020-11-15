@@ -84,6 +84,8 @@ public class DeviceDashboard extends AppCompatActivity {
     Button valueCO;
     Button valueNO2;
 
+    Handler handler = new Handler();
+
     Context context;
     IoTStarterApplication app;
     BroadcastReceiver iotBroadCastReceiver;
@@ -129,10 +131,11 @@ public class DeviceDashboard extends AppCompatActivity {
                 mConnected = true;
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-                clearUI();
+ //               clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
-                Handler handler = new Handler();
+                System.out.println("Estamos en ACTION_GATT_SERVICES_DISCOVERED");
+
 
                 handler.postDelayed(new Runnable() {
                     public void run() {
@@ -414,7 +417,10 @@ public class DeviceDashboard extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
 
-//        mGattService = mBluetoothLeService.getGattService(uuidService);
+        if (mBluetoothLeService.mBluetoothGatt == null) {
+            return;
+        }
+
         mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
 
         if (mGattCharacteristic != null) {
@@ -503,4 +509,21 @@ public class DeviceDashboard extends AppCompatActivity {
         startActivity(intent);
 
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
+        unbindService(mServiceConnection);
+        mBluetoothLeService.close();
+        handler.removeCallbacksAndMessages(null);
+    }
+
+
 }

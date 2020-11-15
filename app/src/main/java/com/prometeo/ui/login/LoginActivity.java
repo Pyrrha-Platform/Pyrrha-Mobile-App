@@ -71,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     setResult(Activity.RESULT_OK);
 
+
                     //Complete and destroy login activity once successful
                     //finish();
 
@@ -124,6 +125,8 @@ public class LoginActivity extends AppCompatActivity {
                 loadingProgressBar.setVisibility(View.VISIBLE);
                 loginViewModel.login(usernameEditText.getText().toString(),
                         passwordEditText.getText().toString());
+                loginButton.setEnabled(true);
+
             }
         });
     }
