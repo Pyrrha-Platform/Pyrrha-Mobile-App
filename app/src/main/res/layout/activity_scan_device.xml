@@ -37,7 +37,7 @@
         android:layout_width="138dp"
         android:layout_height="56dp"
         android:layout_marginTop="535dp"
-        android:background="#1764EC"
+        android:background="#646464"
         android:enabled="false"
         android:onClick="addClicked"
         android:text="@string/next"
@@ -64,7 +64,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="1.0"/>
 
     <ListView
         android:id="@+id/listDevices"

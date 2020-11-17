@@ -20,10 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 /**
  * Build messages to be published by the application.
  */
@@ -41,14 +37,14 @@ public class MessageFactory {
                 " } }";
     }
 
-    public static String getPrometeoDeviceMessage(String id, PrometeoEvent prometeoEvent) {
+    public static String getPrometeoDeviceMessage(PrometeoEvent prometeoEvent) {
         String msg = null;
         try {
             // convert user object to JSON
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
             JsonElement prometeoEventElement = gson.toJsonTree(prometeoEvent);
-            prometeoEventElement.getAsJsonObject().addProperty("id", id);
+//            prometeoEventElement.getAsJsonObject().addProperty("id", id);
             msg = gson.toJson(prometeoEventElement);
 
             // print JSON string

@@ -62,7 +62,8 @@ public class LoginViewModel extends ViewModel {
             @Override
             public void onAuthorizationSuccess (AccessToken accessToken, IdentityToken identityToken, RefreshToken refreshToken) {
                 //User authenticated
-                loginResult.postValue(new LoginResult(new LoggedInUserView(identityToken.getName())));
+                loginResult.postValue(new LoginResult(new LoggedInUserView(identityToken.getName(), identityToken.getSubject())));
+                System.out.println(identityToken.getSubject());
 
             }
         });

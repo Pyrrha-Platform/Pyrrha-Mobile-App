@@ -37,15 +37,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">  <!-- needed to connect to the api res using http instead of https -->
-        <activity android:name=".DeviceDashboard"></activity>
+        <activity android:name=".DeviceDashboard"
+                android:launchMode="singleInstance"
+        />
         <service android:name=".ble.BluetoothLeService" android:enabled="true"/>
-        <activity android:name=".DeviceScanActivity" />
+        <activity android:name=".DeviceScanActivity"
+            android:launchMode="singleInstance"
+        />
         <activity
-            android:name=".ui.login.LoginActivity">
+            android:name=".ui.login.LoginActivity"
+            android:launchMode="singleInstance">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                    <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                    <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 

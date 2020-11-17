@@ -1,5 +1,6 @@
 package com.prometeo;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -8,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
@@ -35,9 +36,10 @@ import com.prometeo.utils.PrometeoEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.net.SocketFactory;
@@ -82,6 +84,11 @@ public class DeviceDashboard extends AppCompatActivity {
     Button valueCO;
     Button valueNO2;
 
+    ImageView imgBlueetooh;
+    ImageView imgConnectivity;
+
+    Handler handler = new Handler();
+
     Context context;
     IoTStarterApplication app;
     BroadcastReceiver iotBroadCastReceiver;
@@ -118,18 +125,22 @@ public class DeviceDashboard extends AppCompatActivity {
     // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
     //                        or notification operations.
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @SuppressLint("NewApi")
         @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
+                imgBlueetooh.setVisibility(View.INVISIBLE);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-                clearUI();
+                imgBlueetooh.setVisibility(View.VISIBLE);
+                //               clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
-                Handler handler = new Handler();
+                System.out.println("Estamos en ACTION_GATT_SERVICES_DISCOVERED");
+
 
                 handler.postDelayed(new Runnable() {
                     public void run() {
@@ -175,6 +186,9 @@ public class DeviceDashboard extends AppCompatActivity {
         valueHumidity = findViewById(R.id.btHumidity);
         valueCO = findViewById(R.id.btCO);
         valueNO2 = findViewById(R.id.btNO2);
+
+        imgBlueetooh = findViewById(R.id.imgBluetooth);
+        imgConnectivity = findViewById(R.id.imgConnectivity);
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
@@ -225,7 +239,7 @@ public class DeviceDashboard extends AppCompatActivity {
         try {
             SocketFactory factory = null;
             // need to implement ssl here
-            Log.d(TAG, "We are going to creat the listener");
+            Log.d(TAG, "We are going to create the listener");
 
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
             Log.d(TAG, "Listener created");
@@ -266,29 +280,80 @@ public class DeviceDashboard extends AppCompatActivity {
 //        mBluetoothLeService = null;
 //    }
 
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void displayData(String data) {
         if (data != null) {
 
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
+
+            // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[0]+"\n celsius");
-            valueHumidity.setText(parts[1]+"\n %");
-            valueCO.setText(parts[2]+"\n ppm");
-            valueNO2.setText(parts[3]+"\n ppm");
+            valueHumidity.setText(parts[2]+"\n %");
+
+            if (Float.parseFloat(parts[4]) < 0 || Float.parseFloat(parts[4]) > 1000)
+                valueCO.setText("##.## \n ppm");
+            else
+                valueCO.setText(parts[4]+"\n ppm");
+
+            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 10)
+                valueNO2.setText("##.## \n ppm");
+            else
+                valueNO2.setText(parts[6]+"\n ppm");
+
+
+            final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+            f.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            Date device_timestamp = new Date();
+
+            // create a random PrometeoEvent
+            PrometeoEvent pe = new PrometeoEvent();
+            pe.setFirefighter_id(user_id);
+            pe.setDevice_id(mDeviceName);
+            pe.setDevice_battery_level("0");
+            pe.setAcrolein((float) 0.0);
+            pe.setBenzene((float) 0.0);
+            pe.setCarbon_monoxide(Float.parseFloat(parts[4]));
+            pe.setFormaldehyde((float) 0.0);
+            pe.setNitrogen_dioxide(Float.parseFloat(parts[6]));
+            pe.setTemperature(Float.parseFloat(parts[0]));
+            pe.setHumidity(Float.parseFloat(parts[2]));
+            pe.setDevice_timestamp(f.format(device_timestamp));
+
 
             // We send the data to the cloud through IOT Platform
-            sendData(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
+            sendData(pe, device_timestamp);
 
             // We get the status from the cloud
-            getStatus();
+            getStatus(pe, device_timestamp);
 
         }
 
     }
 
-    private void getStatus() {
-        callStatus = retrofitService.get_status(user_id, Calendar.getInstance().getTime().toString()); // TO-DO: timestamp of the device
+    private Date addMinutes(Date date, int amount){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.MINUTE, amount);
+
+        return calendar.getTime();
+    }
+
+    private void getStatus(PrometeoEvent pe, Date device_timestamp) {
+
+        final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm"); // it has to be without the seconds
+
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+
+//        callStatus = retrofitService.get_status(user_id, f.format(new Date())); // TO-DO: timestamp of the device
+//        callStatus = retrofitService.get_status("1999", f.format(new Date()).toString()+":00"); // TO-DO: timestamp of the device
+        callStatus = retrofitService.get_status(pe.getFirefighter_id(), f.format(addMinutes(device_timestamp, -2))+":00");
+//        callStatus = retrofitService.get_status(pe.getFirefighter_id(), "2020-11-13 00:21:00"); // TO-DO: timestamp of the device
+
+
         Log.d(TAG, "callStatus created");
         callStatus.enqueue(new Callback<StatusCloud>() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -312,45 +377,34 @@ public class DeviceDashboard extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusCloud> callStatus, Throwable t) {
-                System.out.println(t.getCause().toString());
-                Log.d(TAG, "ha fallado");
-            }
+                if (t.getCause()!=null)
+                    System.out.println(t.getCause().toString());
+
+                if (imgConnectivity.getVisibility() == View.INVISIBLE) {
+                    imgConnectivity.setVisibility(View.VISIBLE);
+                }
+
+        }
         });
 
 
     }
 
 
-    private void sendData(float temperature, float humidity, float co, float no2) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void sendData(PrometeoEvent pe, Date device_timestamp) {
         try {
-            Random random = new Random();
-            // create a random PrometeoEvent
-            PrometeoEvent pe = new PrometeoEvent();
-            pe.setAcroleine((float) 0.0);
-            pe.setBenzene((float) 0.0);
-            pe.setCO(co);
-            pe.setFormaldehyde((float) 0.0);
-            pe.setNo2(no2);
-            pe.setTemp(temperature);
-            pe.setHumidity(humidity);
+
 
             // create ActionListener to handle message published results
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
             IoTClient iotClient = IoTClient.getInstance(context);
-            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+//            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
+            String messageData = MessageFactory.getPrometeoDeviceMessage(pe);
 
 
-//            messageData = "{\"firefighter_id\": \"4fba5700ofifkf4404949499\"," +
-//                    "\"device_id\": \"Prometeo93930293kdf0203\"," +
-//                    "\"device_battery_level\": \"0\"," +
-//                    "\"temperature\": 18.0," +
-//                    "\"humidity\": 69.0," +
-//                    "\"carbon_monoxide\": 2.0," +
-//                    "\"nitrogen_dioxide\": 10.01," +
-//                    "\"formaldehyde\": 23.22," +
-//                    "\"acrolein\": 12," +
-//                    "\"benzene\": 1.5," +
-//                    "\"device_timestamp\": \"2020-09-10 09:32:38\"}"; //utc time
+            System.out.println("Estamos en el sitio");
+            System.out.println(messageData.toString());
 
 
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
@@ -364,47 +418,55 @@ public class DeviceDashboard extends AppCompatActivity {
                 actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
                 context.sendBroadcast(actionIntent);
             }
-        } catch (MqttException e) {
-            // Publish failed
+
+            if (imgConnectivity.getVisibility() == View.VISIBLE) {
+                imgConnectivity.setVisibility(View.INVISIBLE);
+            }
+
+    } catch (MqttException e) {
+            e.printStackTrace();
+            imgConnectivity.setVisibility(View.VISIBLE);
         }
     }
 
-    public String getMacAddress(Context context) {
-        WifiManager wimanager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        String macAddress = wimanager.getConnectionInfo().getMacAddress();
-        if (macAddress == null) {
-            macAddress = "Device don't have mac address or wi-fi is disabled";
-        }
-        return macAddress;
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
 
-//        mGattService = mBluetoothLeService.getGattService(uuidService);
-        mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
-
-        if (mGattCharacteristic != null) {
-            final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
-            final int charaProp = characteristic.getProperties();
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                // If there is an active notification on a characteristic, clear
-                // it first so it doesn't update the data field on the user interface.
-                if (mNotifyCharacteristic != null) {
-                    mBluetoothLeService.setCharacteristicNotification(
-                            mNotifyCharacteristic, false);
-                    mNotifyCharacteristic = null;
-
-                }
-                mBluetoothLeService.readCharacteristic(characteristic);
-            }
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                mNotifyCharacteristic = characteristic;
-                mBluetoothLeService.setCharacteristicNotification(
-                        characteristic, true);
-            }
+        if (mBluetoothLeService.mBluetoothGatt == null) {
+            return;
         }
 
+        try {
+            mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
+
+            if (mGattCharacteristic != null) {
+                final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
+                final int charaProp = characteristic.getProperties();
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    // If there is an active notification on a characteristic, clear
+                    // it first so it doesn't update the data field on the user interface.
+                    if (mNotifyCharacteristic != null) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mNotifyCharacteristic, false);
+                        mNotifyCharacteristic = null;
+
+                    }
+                    mBluetoothLeService.readCharacteristic(characteristic);
+                }
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    mNotifyCharacteristic = characteristic;
+                    mBluetoothLeService.setCharacteristicNotification(
+                            characteristic, true);
+                }
+
+            }
+            if (imgBlueetooh.getVisibility() == View.VISIBLE) {
+                imgBlueetooh.setVisibility(View.INVISIBLE);
+            }
+        } catch (Exception e) {
+            imgBlueetooh.setVisibility(View.VISIBLE);
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -470,4 +532,21 @@ public class DeviceDashboard extends AppCompatActivity {
         startActivity(intent);
 
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
+        unbindService(mServiceConnection);
+        mBluetoothLeService.close();
+        handler.removeCallbacksAndMessages(null);
+    }
+
+
 }

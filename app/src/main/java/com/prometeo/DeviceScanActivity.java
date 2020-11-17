@@ -8,11 +8,12 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -65,7 +66,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         buttonAddDevice = findViewById(R.id.buttonAddDevice);
 
 
-
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -99,10 +99,29 @@ public class DeviceScanActivity extends AppCompatActivity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
+        buttonAddDevice.setEnabled(false);
+        buttonAddDevice.setBackgroundColor(Color.parseColor("#646464"));
+
+
         // Initializes list view adapter.
         mLeDeviceListAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,deviceNames);
 
         listDevices.setAdapter(mLeDeviceListAdapter);
+
+
+        listDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView < ? > adapter, View view,int position, long arg) {
+                if (mScanning) {
+                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                    mScanning = false;
+                }
+                buttonScanDevice.setEnabled(true);
+                buttonAddDevice.setEnabled(true);
+                buttonAddDevice.setBackgroundColor(Color.parseColor("#1764EC"));
+
+            }
+        });
         scanLeDevice(true);
     }
 
@@ -122,15 +141,6 @@ public class DeviceScanActivity extends AppCompatActivity {
 //        super.onPause();
 //    }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        if (mScanning) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
-            mScanning = false;
-        }
-        buttonScanDevice.setEnabled(true);
-        buttonAddDevice.setEnabled(true);
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void scanLeDevice(final boolean enable) {
@@ -151,7 +161,6 @@ public class DeviceScanActivity extends AppCompatActivity {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
         buttonScanDevice.setEnabled(true);
-        buttonAddDevice.setEnabled(true);
     }
 
 
@@ -167,8 +176,6 @@ public class DeviceScanActivity extends AppCompatActivity {
                         public void run() {
                             String name = device.getName();
                             String address = device.getAddress();
-
-                            Log.i("Device Found", "Name: " + name + " Address: " + address);
                             if (!addresses.contains(address) & name!=null) {
                                 if (name.indexOf("Prometeo") != -1) {
                                     addresses.add(address);
@@ -187,7 +194,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     public void scanClicked(View view) {
         buttonScanDevice.setEnabled(false);
         buttonAddDevice.setEnabled(false);
-//        mLeDeviceListAdapter.clear();
+        mLeDeviceListAdapter.clear();
         bluetoothDevices.clear();
         addresses.clear();
         deviceNames.clear();
@@ -216,6 +223,16 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLeDeviceListAdapter.clear();
+        bluetoothDevices.clear();
+        addresses.clear();
+        deviceNames.clear();
+
+
+    }
 
 }
 
