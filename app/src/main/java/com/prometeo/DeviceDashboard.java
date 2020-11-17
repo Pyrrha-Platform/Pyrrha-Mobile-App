@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
@@ -84,6 +84,9 @@ public class DeviceDashboard extends AppCompatActivity {
     Button valueCO;
     Button valueNO2;
 
+    ImageView imgBlueetooh;
+    ImageView imgConnectivity;
+
     Handler handler = new Handler();
 
     Context context;
@@ -129,9 +132,11 @@ public class DeviceDashboard extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
+                imgBlueetooh.setVisibility(View.INVISIBLE);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
- //               clearUI();
+                imgBlueetooh.setVisibility(View.VISIBLE);
+                //               clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
                 System.out.println("Estamos en ACTION_GATT_SERVICES_DISCOVERED");
@@ -182,6 +187,9 @@ public class DeviceDashboard extends AppCompatActivity {
         valueCO = findViewById(R.id.btCO);
         valueNO2 = findViewById(R.id.btNO2);
 
+        imgBlueetooh = findViewById(R.id.imgBluetooth);
+        imgConnectivity = findViewById(R.id.imgConnectivity);
+
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -231,7 +239,7 @@ public class DeviceDashboard extends AppCompatActivity {
         try {
             SocketFactory factory = null;
             // need to implement ssl here
-            Log.d(TAG, "We are going to creat the listener");
+            Log.d(TAG, "We are going to create the listener");
 
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.CONNECTING);
             Log.d(TAG, "Listener created");
@@ -282,9 +290,17 @@ public class DeviceDashboard extends AppCompatActivity {
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[0]+"\n celsius");
             valueHumidity.setText(parts[2]+"\n %");
-            valueCO.setText(parts[4]+"\n ppm");
-//            valueNO2.setText(parts[6]+"\n ppm");
-            valueNO2.setText("0.00 \n ppm");
+
+            if (Float.parseFloat(parts[4]) < 0 || Float.parseFloat(parts[4]) > 1000)
+                valueCO.setText("##.## \n ppm");
+            else
+                valueCO.setText(parts[4]+"\n ppm");
+
+            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 10)
+                valueNO2.setText("##.## \n ppm");
+            else
+                valueNO2.setText(parts[6]+"\n ppm");
+
 
             final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
@@ -294,8 +310,6 @@ public class DeviceDashboard extends AppCompatActivity {
 
             // create a random PrometeoEvent
             PrometeoEvent pe = new PrometeoEvent();
-//            pe.setFirefighter_id("9876");
-//            pe.setDevice_id("0002");
             pe.setFirefighter_id(user_id);
             pe.setDevice_id(mDeviceName);
             pe.setDevice_battery_level("0");
@@ -303,8 +317,7 @@ public class DeviceDashboard extends AppCompatActivity {
             pe.setBenzene((float) 0.0);
             pe.setCarbon_monoxide(Float.parseFloat(parts[4]));
             pe.setFormaldehyde((float) 0.0);
-//            pe.setNitrogen_dioxide(Float.parseFloat(parts[6]));
-            pe.setNitrogen_dioxide((float) 0.0);
+            pe.setNitrogen_dioxide(Float.parseFloat(parts[6]));
             pe.setTemperature(Float.parseFloat(parts[0]));
             pe.setHumidity(Float.parseFloat(parts[2]));
             pe.setDevice_timestamp(f.format(device_timestamp));
@@ -366,7 +379,12 @@ public class DeviceDashboard extends AppCompatActivity {
             public void onFailure(Call<StatusCloud> callStatus, Throwable t) {
                 if (t.getCause()!=null)
                     System.out.println(t.getCause().toString());
-            }
+
+                if (imgConnectivity.getVisibility() == View.INVISIBLE) {
+                    imgConnectivity.setVisibility(View.VISIBLE);
+                }
+
+        }
         });
 
 
@@ -400,19 +418,17 @@ public class DeviceDashboard extends AppCompatActivity {
                 actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
                 context.sendBroadcast(actionIntent);
             }
-        } catch (MqttException e) {
+
+            if (imgConnectivity.getVisibility() == View.VISIBLE) {
+                imgConnectivity.setVisibility(View.INVISIBLE);
+            }
+
+    } catch (MqttException e) {
             e.printStackTrace();
+            imgConnectivity.setVisibility(View.VISIBLE);
         }
     }
 
-    public String getMacAddress(Context context) {
-        WifiManager wimanager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        String macAddress = wimanager.getConnectionInfo().getMacAddress();
-        if (macAddress == null) {
-            macAddress = "Device don't have mac address or wi-fi is disabled";
-        }
-        return macAddress;
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
@@ -421,29 +437,36 @@ public class DeviceDashboard extends AppCompatActivity {
             return;
         }
 
-        mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
+        try {
+            mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
 
-        if (mGattCharacteristic != null) {
-            final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
-            final int charaProp = characteristic.getProperties();
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                // If there is an active notification on a characteristic, clear
-                // it first so it doesn't update the data field on the user interface.
-                if (mNotifyCharacteristic != null) {
-                    mBluetoothLeService.setCharacteristicNotification(
-                            mNotifyCharacteristic, false);
-                    mNotifyCharacteristic = null;
+            if (mGattCharacteristic != null) {
+                final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
+                final int charaProp = characteristic.getProperties();
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    // If there is an active notification on a characteristic, clear
+                    // it first so it doesn't update the data field on the user interface.
+                    if (mNotifyCharacteristic != null) {
+                        mBluetoothLeService.setCharacteristicNotification(
+                                mNotifyCharacteristic, false);
+                        mNotifyCharacteristic = null;
 
+                    }
+                    mBluetoothLeService.readCharacteristic(characteristic);
                 }
-                mBluetoothLeService.readCharacteristic(characteristic);
-            }
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                mNotifyCharacteristic = characteristic;
-                mBluetoothLeService.setCharacteristicNotification(
-                        characteristic, true);
-            }
-        }
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    mNotifyCharacteristic = characteristic;
+                    mBluetoothLeService.setCharacteristicNotification(
+                            characteristic, true);
+                }
 
+            }
+            if (imgBlueetooh.getVisibility() == View.VISIBLE) {
+                imgBlueetooh.setVisibility(View.INVISIBLE);
+            }
+        } catch (Exception e) {
+            imgBlueetooh.setVisibility(View.VISIBLE);
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

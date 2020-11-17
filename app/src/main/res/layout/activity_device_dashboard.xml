@@ -210,5 +210,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
+    <ImageView
+        android:id="@+id/imgBluetooth"
+        android:layout_width="44dp"
+        android:layout_height="41dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintEnd_toStartOf="@+id/imgConnectivity"
+        app:layout_constraintHorizontal_bias="0.93"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/nobluetooth" />
+
+    <ImageView
+        android:id="@+id/imgConnectivity"
+        android:layout_width="55dp"
+        android:layout_height="42dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.952"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/noconnectivity" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
