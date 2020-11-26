@@ -84,7 +84,7 @@ public class DeviceDashboard extends AppCompatActivity {
     Button valueCO;
     Button valueNO2;
 
-    ImageView imgBlueetooh;
+    ImageView imgBluetooh;
     ImageView imgConnectivity;
 
     Handler handler = new Handler();
@@ -132,10 +132,10 @@ public class DeviceDashboard extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
-                imgBlueetooh.setVisibility(View.INVISIBLE);
+                imgBluetooh.setVisibility(View.INVISIBLE);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-                imgBlueetooh.setVisibility(View.VISIBLE);
+                imgBluetooh.setVisibility(View.VISIBLE);
                 //               clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 updateDateTime();
@@ -187,7 +187,7 @@ public class DeviceDashboard extends AppCompatActivity {
         valueCO = findViewById(R.id.btCO);
         valueNO2 = findViewById(R.id.btNO2);
 
-        imgBlueetooh = findViewById(R.id.imgBluetooth);
+        imgBluetooh = findViewById(R.id.imgBluetooth);
         imgConnectivity = findViewById(R.id.imgConnectivity);
 
 
@@ -254,9 +254,11 @@ public class DeviceDashboard extends AppCompatActivity {
         } catch (MqttException e) {
             if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
                 // error while connecting to the broker - send an intent to inform the user
-                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
-                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
-                context.sendBroadcast(actionIntent);
+//                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
+//                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
+//                context.sendBroadcast(actionIntent);
+                imgConnectivity.setVisibility(View.VISIBLE);
+
             }
         }
 
@@ -461,11 +463,11 @@ public class DeviceDashboard extends AppCompatActivity {
                 }
 
             }
-            if (imgBlueetooh.getVisibility() == View.VISIBLE) {
-                imgBlueetooh.setVisibility(View.INVISIBLE);
-            }
+//            if (imgBluetooh.getVisibility() == View.VISIBLE) {
+//                imgBluetooh.setVisibility(View.INVISIBLE);
+//            }
         } catch (Exception e) {
-            imgBlueetooh.setVisibility(View.VISIBLE);
+            imgBluetooh.setVisibility(View.VISIBLE);
         }
     }
 
