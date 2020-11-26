@@ -179,8 +179,8 @@
 
     <Button
         android:id="@+id/btHome"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:background="@drawable/dashboard"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -190,8 +190,8 @@
 
     <Button
         android:id="@+id/btScan"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:background="@drawable/devices"
         android:onClick="scanClicked"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -201,8 +201,8 @@
 
     <Button
         android:id="@+id/btLogin"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:background="@drawable/profile"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -212,8 +212,8 @@
 
     <ImageView
         android:id="@+id/imgBluetooth"
-        android:layout_width="44dp"
-        android:layout_height="41dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintEnd_toStartOf="@+id/imgConnectivity"
@@ -224,8 +224,8 @@
 
     <ImageView
         android:id="@+id/imgConnectivity"
-        android:layout_width="55dp"
-        android:layout_height="42dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintEnd_toEndOf="parent"
