@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,8 +24,11 @@ import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import com.prometeo.ble.BluetoothLeService;
+import com.prometeo.db.AppDatabase;
+import com.prometeo.db.PrometeoTable;
 import com.prometeo.io.RetrofitAdapter;
 import com.prometeo.io.RetrofitService;
 import com.prometeo.io.StatusCloud;
@@ -37,6 +41,7 @@ import com.prometeo.utils.PrometeoEvent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -96,6 +101,11 @@ public class DeviceDashboard extends AppCompatActivity {
     Call<StatusCloud> callStatus;
     Retrofit retrofit;
     RetrofitService retrofitService;
+
+    AppDatabase db;
+
+    boolean connectivity = true;
+
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -202,6 +212,12 @@ public class DeviceDashboard extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+
+        System.out.println("CREAMOS LA BASE DE DATOS");
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "prometeo").build();
+
+
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
@@ -282,6 +298,9 @@ public class DeviceDashboard extends AppCompatActivity {
 //        mBluetoothLeService = null;
 //    }
 
+
+
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void displayData(String data) {
         if (data != null) {
@@ -289,19 +308,26 @@ public class DeviceDashboard extends AppCompatActivity {
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
 
+            System.out.println("RS CO: " + parts[8]);
+
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[0]+"\n celsius");
             valueHumidity.setText(parts[2]+"\n %");
 
-            if (Float.parseFloat(parts[4]) < 0 || Float.parseFloat(parts[4]) > 1000)
-                valueCO.setText("##.## \n ppm");
-            else
+
+
+//            if (Float.parseFloat(parts[4]) < 0 || Float.parseFloat(parts[4]) > 1000)
+//                valueCO.setText("##.## \n ppm");
+//            else
                 valueCO.setText(parts[4]+"\n ppm");
 
-            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 10)
-                valueNO2.setText("##.## \n ppm");
-            else
+//            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 10)
+//                valueNO2.setText("##.## \n ppm");
+//            else
                 valueNO2.setText(parts[6]+"\n ppm");
+
+            System.out.println("RS CO: " + parts[8]);
+            System.out.println("RS NO2: " + parts[9]);
 
 
             final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -326,11 +352,22 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
             // We send the data to the cloud through IOT Platform
-            sendData(pe, device_timestamp);
+            try {
+                sendData(pe, device_timestamp);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("It was not possible to send the data, so we storage in the database");
+                savePrometeoEvent(pe, device_timestamp);
+                imgConnectivity.setVisibility(View.VISIBLE);
+                connectivity = false;
+            }
 
-            // We get the status from the cloud
+        // We get the status from the cloud
             getStatus(pe, device_timestamp);
 
+            if (connectivity == true) {
+                sendDataDatabase();
+            }
         }
 
     }
@@ -393,8 +430,50 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
 
+    private void savePrometeoEvent(PrometeoEvent pe, Date device_timestamp) {
+        System.out.println("No communication - we save the data into the prometeo lite database in local");
+
+        System.out.println("Create object to insert in database");
+        final PrometeoTable prometeoTable = new PrometeoTable();
+
+        prometeoTable.device_timestamp = pe.getDevice_timestamp();
+        prometeoTable.firefighter_id = pe.getFirefighter_id();
+        prometeoTable.device_id = pe.getDevice_id();
+        prometeoTable.device_battery_level = pe.getDevice_battery_level();
+        prometeoTable.temperature = pe.getTemperature();
+        prometeoTable.humidity = pe.getHumidity();
+        prometeoTable.carbon_monoxide = pe.getCarbon_monoxide();
+        prometeoTable.nitrogen_dioxide = pe.getNitrogen_dioxide();
+        prometeoTable.formaldehyde = pe.getFormaldehyde();
+        prometeoTable.acrolein = pe.getAcrolein();
+        prometeoTable.benzene = pe.getBenzene();
+
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Insert row in database");
+                try {
+                    db.prometeoDao().insertAll(prometeoTable);
+                } catch (Exception e) {
+                    System.out.println("It was not possible to insert the row");
+                }
+
+//                PrometeoTable user_query = new PrometeoTable();
+//                System.out.println("LEO LA FILA");
+//                try {
+//                    user_query = db.prometeoDao().getAll();
+//                } catch (Exception e) {
+//                    System.out.println("NO SE HA ENCONTRADO EL REGISTRO");
+//                }
+
+            }
+        });
+
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void sendData(PrometeoEvent pe, Date device_timestamp) {
+    private void sendData(PrometeoEvent pe, Date device_timestamp) throws Exception {
         try {
 
 
@@ -423,12 +502,65 @@ public class DeviceDashboard extends AppCompatActivity {
 
             if (imgConnectivity.getVisibility() == View.VISIBLE) {
                 imgConnectivity.setVisibility(View.INVISIBLE);
+                connectivity = true;
             }
 
-    } catch (MqttException e) {
+            if(iotClient.isMqttConnected()) {
+                System.out.println("****** ESTAMOS CONECTADOS ****+");
+
+            }
+            else {
+                System.out.println("****** AHORA ESTAMOS DESCONECTADOS ****+");
+
+            }
+        } catch (MqttException e) {
             e.printStackTrace();
-            imgConnectivity.setVisibility(View.VISIBLE);
+
+            System.out.println("It was not possible to send data, we launch an exception");
+
+//            throw new Exception("Data not sent", e);
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void sendDataDatabase() {
+        final PrometeoEvent pe = new PrometeoEvent();
+        final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        System.out.println("Create object to insert in database");
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<PrometeoTable> user_query = new ArrayList<PrometeoTable>();
+                System.out.println("Read the row");
+                try {
+                    user_query = (ArrayList<PrometeoTable>) db.prometeoDao().getAll();
+                    System.out.println("There are " + user_query.size() + " rows in the database");
+
+                    int i;
+                    for (i=0;i<user_query.size();i++) {
+                        pe.setDevice_timestamp(user_query.get(i).device_timestamp);
+                        pe.setFirefighter_id(user_query.get(i).firefighter_id);
+                        pe.setDevice_id(user_query.get(i).device_id);
+                        pe.setDevice_battery_level(user_query.get(i).device_battery_level);
+                        pe.setTemperature(user_query.get(i).temperature);
+                        pe.setHumidity(user_query.get(i).humidity);
+                        pe.setCarbon_monoxide(user_query.get(i).carbon_monoxide);
+                        pe.setNitrogen_dioxide(user_query.get(i).nitrogen_dioxide);
+                        pe.setFormaldehyde(user_query.get(i).formaldehyde);
+                        pe.setAcrolein(user_query.get(i).acrolein);
+                        pe.setBenzene(user_query.get(i).benzene);
+
+                        sendData(pe, f.parse(user_query.get(i).device_timestamp));
+                        db.prometeoDao().delete(user_query.get(i));
+                    }
+
+                } catch (Exception e) {
+                    System.out.println("THERE WERE NO ROWS");
+                }
+            }
+        });
+
     }
 
 

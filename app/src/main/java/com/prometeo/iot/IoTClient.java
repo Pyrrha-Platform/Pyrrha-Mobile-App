@@ -357,7 +357,7 @@ public class IoTClient {
      *
      * @return True if client is connected, false if not
      */
-    private boolean isMqttConnected() {
+    public boolean isMqttConnected() {
         Log.d(TAG, ".isMqttConnected() entered");
         boolean connected = false;
         try {
