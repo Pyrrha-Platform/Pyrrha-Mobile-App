@@ -62,5 +62,18 @@ App ID assigned this user’s identity to his anonymous profile, so his previous
     <string name="switch_to_identified_notice">"A user started to use the app anonymously, made some selections, and then logged in.
 Since he had logged in in the past, the app switches over to his existing identified profile in place of his anonymous profile."</string>
 
+    <string name="ConnectionAcceptedMsg1">Service Connection from AccessoryConsumer has been accepted by AccessoryProvider.</string>
+    <string name="ConnectionAcceptedMsg2">Service Connection from MessageConsumer has been accepted by MessageProvider.</string>
+    <string name="ConnectionTerminateddMsg">Service Connection with AccessoryConsumer has been terminated.</string>
+    <string name="ConnectionTerminateddMsg2">Service Connection with MessageConsumer has been terminated.</string>
+    <string name="Authenticated">Peer Agent has been authenticated!!!</string>
+
+    <!-- Strings related to test smartwatch -->
+
+    <string name="hello_world">Hello Message!</string>
+    <string name="NoPeersFound">No peers have been found!!!</string>
+    <string name="buttonFindPeerAgent">Find PeerAgent</string>
+    <string name="buttonSend">Send</string>
+
 
 </resources>

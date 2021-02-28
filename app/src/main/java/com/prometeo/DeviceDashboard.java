@@ -14,8 +14,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -54,6 +56,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+
 public class DeviceDashboard extends AppCompatActivity {
 
     private final static String TAG = DeviceDashboard.class.getSimpleName();
@@ -73,6 +76,10 @@ public class DeviceDashboard extends AppCompatActivity {
     private BluetoothGattCharacteristic mGattStatusCloud;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
+
+    // Variable to maintain the app connected in mobile sleeping mode
+    private  PowerManager.WakeLock mWakeLock;
+
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -186,6 +193,16 @@ public class DeviceDashboard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_dashboard);
 
+        // We maintain the screen always on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyApp::MyWakelockTag");
+        mWakeLock.acquire();
+        // end of block to maintain the screen on
+
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
@@ -245,7 +262,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         app.setDeviceType(Constants.DEVICE_TYPE);
-        app.setDeviceId(user_id.replace("@", "-"));
+        app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
         app.setOrganization("p0g2ka");
         app.setAuthToken("prometeopriegoholaquetal");
 
@@ -308,7 +325,7 @@ public class DeviceDashboard extends AppCompatActivity {
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
 
-            System.out.println("RS CO: " + parts[8]);
+ //           System.out.println("RS CO: " + parts[8]);
 
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[0]+"\n celsius");
@@ -326,8 +343,8 @@ public class DeviceDashboard extends AppCompatActivity {
 //            else
                 valueNO2.setText(parts[6]+"\n ppm");
 
-            System.out.println("RS CO: " + parts[8]);
-            System.out.println("RS NO2: " + parts[9]);
+   //         System.out.println("RS CO: " + parts[8]);
+//            System.out.println("RS NO2: " + parts[9]);
 
 
             final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -403,13 +420,14 @@ public class DeviceDashboard extends AppCompatActivity {
                     return;
                 }
                 else {
-                    System.out.println(response.body().getFirefighter_id());
-                    System.out.println(response.body().getStatus());
-                    System.out.println(response.body().getTimestamp_mins());
+
+                    System.out.println("*** Status cloud get");
+                    System.out.print("Firefighter: " + response.body().getFirefighter_id());
+                    System.out.print(" Status color: " + response.body().getStatus());
+                    System.out.println(" Timestamp: " + response.body().getTimestamp_mins());
 
                     updateStatusCloud(response.body().getStatus());
 
-                    Log.d(TAG, "ha ido bien");
                 }
 
             }
@@ -667,6 +685,16 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
+    public void homeClicked(View view) {
+        Intent intent;
+
+        intent = new Intent(DeviceDashboard.this, DeviceScanActivity.class);
+        intent.putExtra(DeviceScanActivity.USER_ID, user_id);
+
+        startActivity(intent);
+
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -680,6 +708,9 @@ public class DeviceDashboard extends AppCompatActivity {
         unbindService(mServiceConnection);
         mBluetoothLeService.close();
         handler.removeCallbacksAndMessages(null);
+
+        // we have to release the variablre to maintain the app connected
+        mWakeLock.release();
     }
 
 
