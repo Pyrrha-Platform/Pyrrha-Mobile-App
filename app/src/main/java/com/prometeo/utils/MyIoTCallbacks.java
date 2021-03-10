@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.prometeo.DeviceDashboard;
 import com.prometeo.IoTStarterApplication;
 import com.prometeo.iot.IoTCallbacks;
 
@@ -61,12 +62,12 @@ public class MyIoTCallbacks implements IoTCallbacks {
 
         app.setConnected(false);
 
-        //String runningActivity = app.getCurrentRunningActivity();
-        //if (runningActivity != null && runningActivity.equals(LoginPagerFragment.class.getName())) {
+        String runningActivity = app.getCurrentRunningActivity();
+        if (runningActivity != null && runningActivity.equals(DeviceDashboard.class.getName())) {
         Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
         actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_DISCONNECT);
-//            context.sendBroadcast(actionIntent);
-        //}
+            context.sendBroadcast(actionIntent);
+        }
     }
 
     /**
