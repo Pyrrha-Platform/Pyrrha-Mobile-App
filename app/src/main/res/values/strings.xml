@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Prometeo</string>
+    <string name="app_name">Pyrrha</string>
     <!-- Strings related to login -->
     <string name="prompt_email"></string>
     <string name="prompt_password"></string>
@@ -31,7 +31,7 @@
     <string name="no_data">No data</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
-    <string name="title_devices">Prometeo</string>
+    <string name="title_devices">Pyrrha</string>
     <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
 
     <string name="unknown_device">Unknown device</string>
