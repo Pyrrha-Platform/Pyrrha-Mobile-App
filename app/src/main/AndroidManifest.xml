@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.prometeo">
+    package="org.pyrrha_platform">
 
     <uses-permission android:name="android.permission.BLUETOOTH" /> <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -57,7 +57,7 @@
 
         <activity
             android:name=".ui.login.LoginActivity"
-            android:launchMode="singleInstance"> <!-- com.prometeo.galaxy.ConsumerActivity -->
+            android:launchMode="singleInstance"> <!-- ConsumerActivity -->
             <intent-filter>
                     <action android:name="android.intent.action.MAIN" />
 
@@ -67,7 +67,7 @@
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
 
-        <service android:name="com.prometeo.galaxy.ConsumerService" /> <!-- For smartwatch -->
+        <service android:name="org.pyrrha_platform.galaxy.ConsumerService" /> <!-- For smartwatch -->
 
         <meta-data
             android:name="AccessoryServicesLocation"

@@ -32,12 +32,12 @@
     ]>
 <resources>
 
-    <application name="Prometeo" >
+    <application name="Pyrrha" >
         <serviceProfile
             id="/sample/hellomessage"
             name="hellomessage"
             role="consumer"
-            serviceImpl="com.prometeo.galaxy.ConsumerService"
+            serviceImpl="org.pyrrha_platform.galaxy.ConsumerService"
             version="1.0">
             <supportedTransports>
                 <transport type="TRANSPORT_BT" />
