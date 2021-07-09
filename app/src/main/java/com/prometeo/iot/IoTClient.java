@@ -357,16 +357,23 @@ public class IoTClient {
      *
      * @return True if client is connected, false if not
      */
-    private boolean isMqttConnected() {
+    public boolean isMqttConnected() {
         Log.d(TAG, ".isMqttConnected() entered");
         boolean connected = false;
         try {
             if ((client != null) && (client.isConnected())) {
                 connected = true;
+
             }
         } catch (Exception e) {
             // swallowing the exception as it means the client is not connected
         }
+
+        if (client == null) {
+            Log.d(TAG, "Client is null" + connected);
+
+        }
+
         Log.d(TAG, ".isMqttConnected() - returning " + connected);
         return connected;
     }

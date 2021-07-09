@@ -6,15 +6,19 @@ import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
@@ -22,9 +26,13 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import com.prometeo.ble.BluetoothLeService;
+import com.prometeo.db.AppDatabase;
+import com.prometeo.db.PrometeoTable;
 import com.prometeo.io.RetrofitAdapter;
 import com.prometeo.io.RetrofitService;
 import com.prometeo.io.StatusCloud;
@@ -37,6 +45,7 @@ import com.prometeo.utils.PrometeoEvent;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -48,6 +57,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+
 
 public class DeviceDashboard extends AppCompatActivity {
 
@@ -68,6 +78,10 @@ public class DeviceDashboard extends AppCompatActivity {
     private BluetoothGattCharacteristic mGattStatusCloud;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
+
+    // Variable to maintain the app connected in mobile sleeping mode
+    private  PowerManager.WakeLock mWakeLock;
+
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -96,6 +110,11 @@ public class DeviceDashboard extends AppCompatActivity {
     Call<StatusCloud> callStatus;
     Retrofit retrofit;
     RetrofitService retrofitService;
+
+    AppDatabase db;
+
+    boolean connectivity = true;
+
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -176,6 +195,16 @@ public class DeviceDashboard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_dashboard);
 
+        // We maintain the screen always on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyApp::MyWakelockTag");
+        mWakeLock.acquire();
+        // end of block to maintain the screen on
+
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
@@ -202,6 +231,12 @@ public class DeviceDashboard extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+
+        System.out.println("CREAMOS LA BASE DE DATOS");
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "prometeo").build();
+
+
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
@@ -229,7 +264,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         app.setDeviceType(Constants.DEVICE_TYPE);
-        app.setDeviceId(user_id.replace("@", "-"));
+        app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
         app.setOrganization("p0g2ka");
         app.setAuthToken("prometeopriegoholaquetal");
 
@@ -269,18 +304,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unregisterReceiver(mGattUpdateReceiver);
-//    }
 
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        unbindService(mServiceConnection);
-//        mBluetoothLeService = null;
-//    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void displayData(String data) {
@@ -289,19 +313,26 @@ public class DeviceDashboard extends AppCompatActivity {
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
 
-            // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
-            valueTemperature.setText(parts[0]+"\n celsius");
-            valueHumidity.setText(parts[2]+"\n %");
+ //           System.out.println("RS CO: " + parts[8]);
 
-            if (Float.parseFloat(parts[4]) < 0 || Float.parseFloat(parts[4]) > 1000)
+            // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
+            valueTemperature.setText(parts[2]+"\n celsius");
+            valueHumidity.setText(parts[4]+"\n %");
+
+
+
+            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 1000)
                 valueCO.setText("##.## \n ppm");
             else
-                valueCO.setText(parts[4]+"\n ppm");
+                valueCO.setText(parts[6]+"\n ppm");
 
-            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 10)
+            if (Float.parseFloat(parts[8]) < 0 || Float.parseFloat(parts[8]) > 10)
                 valueNO2.setText("##.## \n ppm");
             else
-                valueNO2.setText(parts[6]+"\n ppm");
+                valueNO2.setText(parts[8]+"\n ppm");
+
+   //         System.out.println("RS CO: " + parts[8]);
+//            System.out.println("RS NO2: " + parts[9]);
 
 
             final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -317,20 +348,30 @@ public class DeviceDashboard extends AppCompatActivity {
             pe.setDevice_battery_level("0");
             pe.setAcrolein((float) 0.0);
             pe.setBenzene((float) 0.0);
-            pe.setCarbon_monoxide(Float.parseFloat(parts[4]));
+            pe.setCarbon_monoxide(Float.parseFloat(parts[6]));
             pe.setFormaldehyde((float) 0.0);
-            pe.setNitrogen_dioxide(Float.parseFloat(parts[6]));
-            pe.setTemperature(Float.parseFloat(parts[0]));
-            pe.setHumidity(Float.parseFloat(parts[2]));
+            pe.setNitrogen_dioxide(Float.parseFloat(parts[8]));
+            pe.setTemperature(Float.parseFloat(parts[2]));
+            pe.setHumidity(Float.parseFloat(parts[4]));
             pe.setDevice_timestamp(f.format(device_timestamp));
 
 
             // We send the data to the cloud through IOT Platform
-            sendData(pe, device_timestamp);
+            try {
+                sendData(pe, device_timestamp);
+            } catch (Exception e) {
+                System.out.println("It was not possible to send the data, so we storage in the database");
+                savePrometeoEvent(pe, device_timestamp);
+                imgConnectivity.setVisibility(View.VISIBLE);
+                connectivity = false;
+            }
 
-            // We get the status from the cloud
+        // We get the status from the cloud
             getStatus(pe, device_timestamp);
 
+            if (connectivity == true) {
+                sendDataDatabase();
+            }
         }
 
     }
@@ -350,10 +391,7 @@ public class DeviceDashboard extends AppCompatActivity {
         f.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 
-//        callStatus = retrofitService.get_status(user_id, f.format(new Date())); // TO-DO: timestamp of the device
-//        callStatus = retrofitService.get_status("1999", f.format(new Date()).toString()+":00"); // TO-DO: timestamp of the device
         callStatus = retrofitService.get_status(pe.getFirefighter_id(), f.format(addMinutes(device_timestamp, -2))+":00");
-//        callStatus = retrofitService.get_status(pe.getFirefighter_id(), "2020-11-13 00:21:00"); // TO-DO: timestamp of the device
 
 
         Log.d(TAG, "callStatus created");
@@ -366,13 +404,14 @@ public class DeviceDashboard extends AppCompatActivity {
                     return;
                 }
                 else {
-                    System.out.println(response.body().getFirefighter_id());
-                    System.out.println(response.body().getStatus());
-                    System.out.println(response.body().getTimestamp_mins());
+
+                    System.out.println("*** Status cloud get");
+                    System.out.print("Firefighter: " + response.body().getFirefighter_id());
+                    System.out.print(" Status color: " + response.body().getStatus());
+                    System.out.println(" Timestamp: " + response.body().getTimestamp_mins());
 
                     updateStatusCloud(response.body().getStatus());
 
-                    Log.d(TAG, "ha ido bien");
                 }
 
             }
@@ -393,42 +432,130 @@ public class DeviceDashboard extends AppCompatActivity {
     }
 
 
+    private void savePrometeoEvent(PrometeoEvent pe, Date device_timestamp) {
+        System.out.println("No communication - we save the data into the prometeo lite database in local");
+
+        System.out.println("Create object to insert in database");
+        final PrometeoTable prometeoTable = new PrometeoTable();
+
+        prometeoTable.device_timestamp = pe.getDevice_timestamp();
+        prometeoTable.firefighter_id = pe.getFirefighter_id();
+        prometeoTable.device_id = pe.getDevice_id();
+        prometeoTable.device_battery_level = pe.getDevice_battery_level();
+        prometeoTable.temperature = pe.getTemperature();
+        prometeoTable.humidity = pe.getHumidity();
+        prometeoTable.carbon_monoxide = pe.getCarbon_monoxide();
+        prometeoTable.nitrogen_dioxide = pe.getNitrogen_dioxide();
+        prometeoTable.formaldehyde = pe.getFormaldehyde();
+        prometeoTable.acrolein = pe.getAcrolein();
+        prometeoTable.benzene = pe.getBenzene();
+
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Insert row in database");
+                try {
+                    db.prometeoDao().insertAll(prometeoTable);
+                } catch (Exception e) {
+                    System.out.println("It was not possible to insert the row");
+                }
+
+//                PrometeoTable user_query = new PrometeoTable();
+//                System.out.println("LEO LA FILA");
+//                try {
+//                    user_query = db.prometeoDao().getAll();
+//                } catch (Exception e) {
+//                    System.out.println("NO SE HA ENCONTRADO EL REGISTRO");
+//                }
+
+            }
+        });
+
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void sendData(PrometeoEvent pe, Date device_timestamp) {
+    private void sendData(PrometeoEvent pe, Date device_timestamp) throws Exception {
         try {
 
 
             // create ActionListener to handle message published results
             MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
             IoTClient iotClient = IoTClient.getInstance(context);
-//            String messageData = MessageFactory.getPrometeoDeviceMessage(getMacAddress(this.getApplicationContext()), pe);
             String messageData = MessageFactory.getPrometeoDeviceMessage(pe);
 
-
-            System.out.println("Estamos en el sitio");
             System.out.println(messageData.toString());
-
 
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
 
             int count = app.getPublishCount();
             app.setPublishCount(++count);
 
-            String runningActivity = app.getCurrentRunningActivity();
-            if (runningActivity != null && runningActivity.equals(this.getClass().getName())) {
-                Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
-                actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
-                context.sendBroadcast(actionIntent);
-            }
+//            String runningActivity = app.getCurrentRunningActivity();
+//            if (runningActivity != null && runningActivity.equals(this.getClass().getName())) {
+//                Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
+//                actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_PUBLISHED);
+//                context.sendBroadcast(actionIntent);
+//            }
 
             if (imgConnectivity.getVisibility() == View.VISIBLE) {
                 imgConnectivity.setVisibility(View.INVISIBLE);
+                connectivity = true;
             }
 
-    } catch (MqttException e) {
-            e.printStackTrace();
-            imgConnectivity.setVisibility(View.VISIBLE);
+            if(iotClient.isMqttConnected()) {
+                System.out.println("****** ESTAMOS CONECTADOS ****+");
+
+            }
+            else {
+                System.out.println("****** AHORA ESTAMOS DESCONECTADOS ****+");
+            }
+        } catch (MqttException e) {
+            System.out.println("Error, it was not possible to send data, we launch an exception");
+            throw new Exception("Error when trying to connect to IOT in the senddata method");
+
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void sendDataDatabase() {
+        final PrometeoEvent pe = new PrometeoEvent();
+        final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        System.out.println("Create object to insert in database");
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<PrometeoTable> user_query = new ArrayList<PrometeoTable>();
+                System.out.println("Read the row");
+                try {
+                    user_query = (ArrayList<PrometeoTable>) db.prometeoDao().getAll();
+                    System.out.println("There are " + user_query.size() + " rows in the database");
+
+                    int i;
+                    for (i=0;i<user_query.size();i++) {
+                        pe.setDevice_timestamp(user_query.get(i).device_timestamp);
+                        pe.setFirefighter_id(user_query.get(i).firefighter_id);
+                        pe.setDevice_id(user_query.get(i).device_id);
+                        pe.setDevice_battery_level(user_query.get(i).device_battery_level);
+                        pe.setTemperature(user_query.get(i).temperature);
+                        pe.setHumidity(user_query.get(i).humidity);
+                        pe.setCarbon_monoxide(user_query.get(i).carbon_monoxide);
+                        pe.setNitrogen_dioxide(user_query.get(i).nitrogen_dioxide);
+                        pe.setFormaldehyde(user_query.get(i).formaldehyde);
+                        pe.setAcrolein(user_query.get(i).acrolein);
+                        pe.setBenzene(user_query.get(i).benzene);
+
+                        sendData(pe, f.parse(user_query.get(i).device_timestamp));
+                        db.prometeoDao().delete(user_query.get(i));
+                    }
+
+                } catch (Exception e) {
+                    System.out.println("THERE WERE NO ROWS");
+                }
+            }
+        });
+
     }
 
 
@@ -474,12 +601,19 @@ public class DeviceDashboard extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void updateDateTime() {
 
+        final SimpleDateFormat fdate = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        fdate.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date time_date_prometeo_device = new Date();
+
+
 //        mGattService = mBluetoothLeService.getGattService(uuidService);
         mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
 
         if (mGattDateTime != null) {
             Date currentTime = Calendar.getInstance().getTime(); // convert into utc
-            mGattDateTime.setValue(currentTime.toString());
+            mGattDateTime.setValue(fdate.format(time_date_prometeo_device));
             mBluetoothLeService.writeCharacteristic(mGattDateTime);
         }
 
@@ -493,23 +627,34 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         if (status_choice == -1) {
-//            Integer[] status_choices = new Integer[3];
-//            Random ga = new Random();
 
-//            status_choices[0] = 3;   // red
-//            status_choices[1] = 2;    // yellow
-//            status_choices[2] = 1;    // green
-
-//            int random_number = ga.nextInt(3);
-
-//            status_choice = status_choices[random_number];
-
-            status_choice = 3;  // red
+            Log.d(TAG, "Error: Get status from cloud doesn't work");
+            status_choice = 3;
 
         }
+
         if (mGattStatusCloud != null) {
             mGattStatusCloud.setValue(status_choice.toString());
             mBluetoothLeService.writeCharacteristic(mGattStatusCloud);
+            if (status_choice == 3) {
+                valueCO.setBackgroundResource(R.drawable.red);
+                valueNO2.setBackgroundResource(R.drawable.red);
+                valueHumidity.setBackgroundResource(R.drawable.red);
+                valueTemperature.setBackgroundResource(R.drawable.red);
+            }
+            else if (status_choice == 1) {
+                valueCO.setBackgroundResource(R.drawable.green);
+                valueNO2.setBackgroundResource(R.drawable.green);
+                valueHumidity.setBackgroundResource(R.drawable.green);
+                valueTemperature.setBackgroundResource(R.drawable.green);
+            }
+            else {
+                valueCO.setBackgroundResource(R.drawable.yellow);
+                valueNO2.setBackgroundResource(R.drawable.yellow);
+                valueHumidity.setBackgroundResource(R.drawable.yellow);
+                valueTemperature.setBackgroundResource(R.drawable.yellow);
+
+            }
         }
 
     }
@@ -532,6 +677,45 @@ public class DeviceDashboard extends AppCompatActivity {
         intent.putExtra(DeviceScanActivity.USER_ID, user_id);
 
         startActivity(intent);
+        finish();
+
+    }
+
+    public void loginClicked(View view) {
+        final Intent intent;
+
+        intent = new Intent(DeviceDashboard.this, com.prometeo.ui.login.LoginActivity.class);
+
+        // Build an AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(DeviceDashboard.this);
+
+        // Set a title for alert dialog
+        builder.setTitle("Log out user");
+
+        // Ask the final question
+        builder.setMessage("Are you sure you want to log out?");
+
+        // Set the alert dialog yes button click listener
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startActivity(intent);
+                finish();
+
+            }
+        });
+
+        // Set the alert dialog no button click listener
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // We don't do anything
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        // Display the alert dialog on interface
+        dialog.show();
 
     }
 
@@ -548,6 +732,9 @@ public class DeviceDashboard extends AppCompatActivity {
         unbindService(mServiceConnection);
         mBluetoothLeService.close();
         handler.removeCallbacksAndMessages(null);
+
+        // we have to release the variablre to maintain the app connected
+        mWakeLock.release();
     }
 
 

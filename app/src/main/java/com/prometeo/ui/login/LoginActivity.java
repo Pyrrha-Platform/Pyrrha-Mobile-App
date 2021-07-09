@@ -1,7 +1,10 @@
 package com.prometeo.ui.login;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -38,6 +41,21 @@ public class LoginActivity extends AppCompatActivity {
         final EditText passwordEditText = findViewById(R.id.password);
         final Button loginButton = findViewById(R.id.login);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
+        final String user;
+
+        SharedPreferences prefe = getSharedPreferences("user_session",Context.MODE_PRIVATE);
+
+        user = prefe.getString("user",null);
+
+        if ( user != null) {
+            // We go to the main activity after the login
+            Intent intent;
+
+            intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
+            intent.putExtra(DeviceScanActivity.USER_ID, user);
+
+            startActivity(intent);
+        }
 
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
@@ -75,8 +93,14 @@ public class LoginActivity extends AppCompatActivity {
                     //Complete and destroy login activity once successful
                     //finish();
 
+                    // We save the logged user and maintain the session opened
+
+                    SharedPreferences user_session=getSharedPreferences("user_session", Context.MODE_PRIVATE);
+                    Editor editor=user_session.edit();
+                    editor.putString("user", loginResult.getSuccess().getUserToken());
+                    editor.commit();
+
                     // We go to the main activity after the login
-                    // We use the bluetooth checkbox only for testing purpose
                     Intent intent;
 
                     intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
