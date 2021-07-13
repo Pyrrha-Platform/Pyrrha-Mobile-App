@@ -29,26 +29,44 @@ import java.util.ArrayList;
  */
 public class DeviceScanActivity extends AppCompatActivity {
     public static final String USER_ID = "USER_ID";
-
+    private static final int REQUEST_ENABLE_BT = 1;
+    // Stops scanning after 10 seconds.
+    private static final long SCAN_PERIOD = 10000;
+    ListView listDevices;
+    Button buttonAddDevice;
+    Button buttonScanDevice;
+    ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
+    ArrayList<String> addresses = new ArrayList<>();
+    ArrayList<String> deviceNames = new ArrayList<>();
     private ArrayAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
-
-    ListView listDevices;
-    Button buttonAddDevice;
-    Button buttonScanDevice;
-
     private String user_id;
+    // Device scan callback.
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private final BluetoothAdapter.LeScanCallback mLeScanCallback =
+            new BluetoothAdapter.LeScanCallback() {
 
-    ArrayList<BluetoothDevice> bluetoothDevices = new ArrayList<>();
-    ArrayList<String> addresses = new ArrayList<>();
-    ArrayList<String> deviceNames = new ArrayList<>();
-
-
-    private static final int REQUEST_ENABLE_BT = 1;
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String name = device.getName();
+                            String address = device.getAddress();
+                            if (!addresses.contains(address) & name != null) {
+                                if (name.indexOf("Pyrrha") != -1) {
+                                    addresses.add(address);
+                                    bluetoothDevices.add(device);
+                                    deviceNames.add(name);
+                                    mLeDeviceListAdapter.notifyDataSetChanged();
+                                }
+                            }
+                        }
+                    });
+                }
+            };
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
@@ -104,14 +122,14 @@ public class DeviceScanActivity extends AppCompatActivity {
 
 
         // Initializes list view adapter.
-        mLeDeviceListAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,deviceNames);
+        mLeDeviceListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, deviceNames);
 
         listDevices.setAdapter(mLeDeviceListAdapter);
 
 
         listDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView < ? > adapter, View view,int position, long arg) {
+            public void onItemClick(AdapterView<?> adapter, View view, int position, long arg) {
                 if (mScanning) {
                     mBluetoothAdapter.stopLeScan(mLeScanCallback);
                     mScanning = false;
@@ -125,6 +143,12 @@ public class DeviceScanActivity extends AppCompatActivity {
         scanLeDevice(true);
     }
 
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
@@ -134,13 +158,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
-//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//    }
-
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void scanLeDevice(final boolean enable) {
@@ -163,33 +180,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         buttonScanDevice.setEnabled(true);
     }
 
-
-    // Device scan callback.
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
-
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            String name = device.getName();
-                            String address = device.getAddress();
-                            if (!addresses.contains(address) & name!=null) {
-                                if (name.indexOf("Pyrrha") != -1) {
-                                    addresses.add(address);
-                                    bluetoothDevices.add(device);
-                                    deviceNames.add(name);
-                                    mLeDeviceListAdapter.notifyDataSetChanged();
-                                }
-                            }
-                        }
-                    });
-                }
-            };
-
-
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void scanClicked(View view) {
         buttonScanDevice.setEnabled(false);
@@ -203,7 +193,6 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     public void addClicked(View view) {
         Intent intent;
-
 
 
         final BluetoothDevice device = bluetoothDevices.get(listDevices.getCheckedItemPosition());

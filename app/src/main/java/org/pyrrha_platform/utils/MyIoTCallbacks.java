@@ -19,21 +19,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.pyrrha_platform.DeviceDashboard;
 import org.pyrrha_platform.IoTStarterApplication;
 import org.pyrrha_platform.iot.IoTCallbacks;
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
  * Implementation of IoTCallbacks interface
  */
 public class MyIoTCallbacks implements IoTCallbacks {
     private final static String TAG = MyIoTCallbacks.class.getName();
+    private static MyIoTCallbacks myIoTCallbacks;
     private final Context context;
     private final IoTStarterApplication app;
-    private static MyIoTCallbacks myIoTCallbacks;
 
     public MyIoTCallbacks(Context context) {
         this.app = (IoTStarterApplication) context;
@@ -64,8 +63,8 @@ public class MyIoTCallbacks implements IoTCallbacks {
 
         String runningActivity = app.getCurrentRunningActivity();
         if (runningActivity != null && runningActivity.equals(DeviceDashboard.class.getName())) {
-        Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
-        actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_DISCONNECT);
+            Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
+            actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_DISCONNECT);
             context.sendBroadcast(actionIntent);
         }
     }
@@ -87,20 +86,20 @@ public class MyIoTCallbacks implements IoTCallbacks {
         //if (runningActivity != null && runningActivity.equals(IoTPagerFragment.class.getName())) {
         Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
         actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_RECEIVED);
-//            context.sendBroadcast(actionIntent);
+        // context.sendBroadcast(actionIntent);
         //}
 
         String payload = new String(mqttMessage.getPayload());
         Log.d(TAG, ".messageArrived - Message received on topic " + topic
                 + ": message is " + payload);
         // TODO: Process message
-//        try {
-//            // send the message through the application logic
-//            MessageConductor.getInstance(context).steerMessage(payload, topic);
-//        } catch (JSONException e) {
-//            Log.e(TAG, ".messageArrived() - Exception caught while steering a message", e.getCause());
-//            e.printStackTrace();
-//        }
+        //        try {
+        //            // send the message through the application logic
+        //            MessageConductor.getInstance(context).steerMessage(payload, topic);
+        //        } catch (JSONException e) {
+        //            Log.e(TAG, ".messageArrived() - Exception caught while steering a message", e.getCause());
+        //            e.printStackTrace();
+        //        }
     }
 
     /**

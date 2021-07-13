@@ -30,6 +30,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pyrrha_platform.ble.BluetoothLeService;
 import org.pyrrha_platform.db.AppDatabase;
 import org.pyrrha_platform.db.PyrrhaTable;
@@ -41,8 +42,6 @@ import org.pyrrha_platform.utils.Constants;
 import org.pyrrha_platform.utils.MessageFactory;
 import org.pyrrha_platform.utils.MyIoTActionListener;
 import org.pyrrha_platform.utils.PyrrhaEvent;
-
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -61,61 +60,33 @@ import retrofit2.Retrofit;
 
 public class DeviceDashboard extends AppCompatActivity {
 
-    private final static String TAG = DeviceDashboard.class.getSimpleName();
-
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String USER_ID = "USER_ID";
-
+    private final static String TAG = DeviceDashboard.class.getSimpleName();
+    private final String LIST_NAME = "NAME";
+    private final String LIST_UUID = "UUID";
+    Button valueTemperature;
+    Button valueHumidity;
+    Button valueCO;
+    Button valueNO2;
+    ImageView imgBluetooh;
+    ImageView imgConnectivity;
+    Handler handler = new Handler();
+    Context context;
+    IoTStarterApplication app;
+    BroadcastReceiver iotBroadCastReceiver;
+    Call<StatusCloud> callStatus;
+    Retrofit retrofit;
+    RetrofitService retrofitService;
+    AppDatabase db;
+    boolean connectivity = true;
     private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
     private String user_id;
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
-    private BluetoothGattCharacteristic mGattCharacteristic;
-    private BluetoothGattCharacteristic mGattDateTime;
-    private BluetoothGattCharacteristic mGattStatusCloud;
-    private boolean mConnected = false;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
-
-    // Variable to maintain the app connected in mobile sleeping mode
-    private  PowerManager.WakeLock mWakeLock;
-
-
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
-
-    private UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
-    private UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
-    private UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
-    private UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
-
-    private BluetoothGattService mGattService;
-
-    Button valueTemperature;
-    Button valueHumidity;
-    Button valueCO;
-    Button valueNO2;
-
-    ImageView imgBluetooh;
-    ImageView imgConnectivity;
-
-    Handler handler = new Handler();
-
-    Context context;
-    IoTStarterApplication app;
-    BroadcastReceiver iotBroadCastReceiver;
-
-    Call<StatusCloud> callStatus;
-    Retrofit retrofit;
-    RetrofitService retrofitService;
-
-    AppDatabase db;
-
-    boolean connectivity = true;
-
-
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -136,7 +107,17 @@ public class DeviceDashboard extends AppCompatActivity {
             mBluetoothLeService = null;
         }
     };
-
+    private BluetoothGattCharacteristic mGattCharacteristic;
+    private BluetoothGattCharacteristic mGattDateTime;
+    private BluetoothGattCharacteristic mGattStatusCloud;
+    private boolean mConnected = false;
+    private BluetoothGattCharacteristic mNotifyCharacteristic;
+    // Variable to maintain the app connected in mobile sleeping mode
+    private PowerManager.WakeLock mWakeLock;
+    private final UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
+    private final UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
+    private final UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
+    private final UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
     // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
@@ -183,6 +164,16 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
     };
+    private BluetoothGattService mGattService;
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
 
     private void clearUI() {
         mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
@@ -304,8 +295,6 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
-
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void displayData(String data) {
         if (data != null) {
@@ -313,25 +302,24 @@ public class DeviceDashboard extends AppCompatActivity {
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
 
- //           System.out.println("RS CO: " + parts[8]);
+            //           System.out.println("RS CO: " + parts[8]);
 
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
-            valueTemperature.setText(parts[2]+"\n celsius");
-            valueHumidity.setText(parts[4]+"\n %");
-
+            valueTemperature.setText(parts[2] + "\n celsius");
+            valueHumidity.setText(parts[4] + "\n %");
 
 
             if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 1000)
                 valueCO.setText("##.## \n ppm");
             else
-                valueCO.setText(parts[6]+"\n ppm");
+                valueCO.setText(parts[6] + "\n ppm");
 
             if (Float.parseFloat(parts[8]) < 0 || Float.parseFloat(parts[8]) > 10)
                 valueNO2.setText("##.## \n ppm");
             else
-                valueNO2.setText(parts[8]+"\n ppm");
+                valueNO2.setText(parts[8] + "\n ppm");
 
-   //         System.out.println("RS CO: " + parts[8]);
+            //         System.out.println("RS CO: " + parts[8]);
 //            System.out.println("RS NO2: " + parts[9]);
 
 
@@ -366,7 +354,7 @@ public class DeviceDashboard extends AppCompatActivity {
                 connectivity = false;
             }
 
-        // We get the status from the cloud
+            // We get the status from the cloud
             getStatus(pe, device_timestamp);
 
             if (connectivity == true) {
@@ -376,7 +364,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
-    private Date addMinutes(Date date, int amount){
+    private Date addMinutes(Date date, int amount) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.MINUTE, amount);
@@ -391,7 +379,7 @@ public class DeviceDashboard extends AppCompatActivity {
         f.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 
-        callStatus = retrofitService.get_status(pe.getFirefighter_id(), f.format(addMinutes(device_timestamp, -2))+":00");
+        callStatus = retrofitService.get_status(pe.getFirefighter_id(), f.format(addMinutes(device_timestamp, -2)) + ":00");
 
 
         Log.d(TAG, "callStatus created");
@@ -400,10 +388,9 @@ public class DeviceDashboard extends AppCompatActivity {
             @Override
             public void onResponse(Call<StatusCloud> callStatus, Response<StatusCloud> response) {
                 if (!response.isSuccessful()) {
-                    Log.d(TAG, "Error when calling to get_status: "+response.code());
+                    Log.d(TAG, "Error when calling to get_status: " + response.code());
                     return;
-                }
-                else {
+                } else {
 
                     System.out.println("*** Status cloud get");
                     System.out.print("Firefighter: " + response.body().getFirefighter_id());
@@ -418,19 +405,18 @@ public class DeviceDashboard extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<StatusCloud> callStatus, Throwable t) {
-                if (t.getCause()!=null)
+                if (t.getCause() != null)
                     System.out.println(t.getCause().toString());
 
                 if (imgConnectivity.getVisibility() == View.INVISIBLE) {
                     imgConnectivity.setVisibility(View.VISIBLE);
                 }
 
-        }
+            }
         });
 
 
     }
-
 
     private void savePyrrhaEvent(PyrrhaEvent pe, Date device_timestamp) {
         System.out.println("No communication - we save the data into the pyrrha lite database in local");
@@ -484,7 +470,7 @@ public class DeviceDashboard extends AppCompatActivity {
             IoTClient iotClient = IoTClient.getInstance(context);
             String messageData = MessageFactory.getPyrrhaDeviceMessage(pe);
 
-            System.out.println(messageData.toString());
+            System.out.println(messageData);
 
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
 
@@ -503,11 +489,10 @@ public class DeviceDashboard extends AppCompatActivity {
                 connectivity = true;
             }
 
-            if(iotClient.isMqttConnected()) {
+            if (iotClient.isMqttConnected()) {
                 System.out.println("****** ESTAMOS CONECTADOS ****+");
 
-            }
-            else {
+            } else {
                 System.out.println("****** AHORA ESTAMOS DESCONECTADOS ****+");
             }
         } catch (MqttException e) {
@@ -533,7 +518,7 @@ public class DeviceDashboard extends AppCompatActivity {
                     System.out.println("There are " + user_query.size() + " rows in the database");
 
                     int i;
-                    for (i=0;i<user_query.size();i++) {
+                    for (i = 0; i < user_query.size(); i++) {
                         pe.setDevice_timestamp(user_query.get(i).device_timestamp);
                         pe.setFirefighter_id(user_query.get(i).firefighter_id);
                         pe.setDevice_id(user_query.get(i).device_id);
@@ -557,7 +542,6 @@ public class DeviceDashboard extends AppCompatActivity {
         });
 
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void displayGattService() {
@@ -641,14 +625,12 @@ public class DeviceDashboard extends AppCompatActivity {
                 valueNO2.setBackgroundResource(R.drawable.red);
                 valueHumidity.setBackgroundResource(R.drawable.red);
                 valueTemperature.setBackgroundResource(R.drawable.red);
-            }
-            else if (status_choice == 1) {
+            } else if (status_choice == 1) {
                 valueCO.setBackgroundResource(R.drawable.green);
                 valueNO2.setBackgroundResource(R.drawable.green);
                 valueHumidity.setBackgroundResource(R.drawable.green);
                 valueTemperature.setBackgroundResource(R.drawable.green);
-            }
-            else {
+            } else {
                 valueCO.setBackgroundResource(R.drawable.yellow);
                 valueNO2.setBackgroundResource(R.drawable.yellow);
                 valueHumidity.setBackgroundResource(R.drawable.yellow);
@@ -658,17 +640,6 @@ public class DeviceDashboard extends AppCompatActivity {
         }
 
     }
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
-    }
-
-
 
     public void scanClicked(View view) {
         Intent intent;

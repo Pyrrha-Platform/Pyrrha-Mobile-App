@@ -44,7 +44,7 @@ public class MessageFactory {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
             JsonElement pyrrhaEventElement = gson.toJsonTree(pyrrhaEvent);
-//            pyrrhaEventElement.getAsJsonObject().addProperty("id", id);
+            //  pyrrhaEventElement.getAsJsonObject().addProperty("id", id);
             msg = gson.toJson(pyrrhaEventElement);
 
             // print JSON string

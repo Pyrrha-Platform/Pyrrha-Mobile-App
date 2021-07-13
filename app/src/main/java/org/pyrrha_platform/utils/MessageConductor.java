@@ -19,9 +19,8 @@ package org.pyrrha_platform.utils;
 import android.content.Context;
 import android.util.Log;
 
-import org.pyrrha_platform.IoTStarterApplication;
-
 import org.json.JSONException;
+import org.pyrrha_platform.IoTStarterApplication;
 
 /**
  * Steer incoming MQTT messages to the proper activities based on their content.

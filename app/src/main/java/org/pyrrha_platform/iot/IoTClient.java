@@ -41,9 +41,8 @@ public class IoTClient {
     private static final String IOT_DEVICE_USERNAME = "use-token-auth";
 
     private static IoTClient instance;
-    private MqttAndroidClient client;
     private final Context context;
-
+    private MqttAndroidClient client;
     private String organization;
     private String deviceType;
     private String deviceID;
@@ -94,6 +93,24 @@ public class IoTClient {
             instance.setDeviceType(deviceType);
         }
         return instance;
+    }
+
+    /**
+     * @param event  The event to create a topic string for
+     * @param format The format of the data sent to this topic
+     * @return The event topic for the specified event string
+     */
+    public static String getEventTopic(String event, String format) {
+        return "iot-2/evt/" + event + "/fmt/json";
+    }
+
+    /**
+     * @param command The command to create a topic string for
+     * @param format  The format of the data sent to this topic
+     * @return The command topic for the specified command string
+     */
+    public static String getCommandTopic(String command, String format) {
+        return "iot-2/cmd/" + command + "/fmt/json";
     }
 
     /**
@@ -232,6 +249,8 @@ public class IoTClient {
         return unsubscribe(commandTopic, userContext, listener);
     }
 
+    // PRIVATE FUNCTIONS
+
     /**
      * Publish a device event message
      *
@@ -267,8 +286,6 @@ public class IoTClient {
         String commandTopic = getCommandTopic(command, format);
         return publish(commandTopic, payload, qos, retained, listener);
     }
-
-    // PRIVATE FUNCTIONS
 
     /**
      * Subscribe to an MQTT topic
@@ -376,24 +393,6 @@ public class IoTClient {
 
         Log.d(TAG, ".isMqttConnected() - returning " + connected);
         return connected;
-    }
-
-    /**
-     * @param event  The event to create a topic string for
-     * @param format The format of the data sent to this topic
-     * @return The event topic for the specified event string
-     */
-    public static String getEventTopic(String event, String format) {
-        return "iot-2/evt/" + event + "/fmt/json";
-    }
-
-    /**
-     * @param command The command to create a topic string for
-     * @param format  The format of the data sent to this topic
-     * @return The command topic for the specified command string
-     */
-    public static String getCommandTopic(String command, String format) {
-        return "iot-2/cmd/" + command + "/fmt/json";
     }
 
     public String getAuthorizationToken() {

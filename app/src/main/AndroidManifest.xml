@@ -7,15 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- The application can be only used in case you have BLE in your mobile -->
 
     <!-- We include this permission for the connectivity to the galaxy watch -->
-
     <uses-permission android:name="com.samsung.accessory.permission.ACCESSORY_FRAMEWORK" />
     <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" />
     <uses-permission android:name="com.samsung.wmanager.ENABLE_NOTIFICATION" />
-    <uses-permission android:name="com.samsung.WATCH_APP_TYPE.Companion"/>
-
-    <uses-feature
-        android:name="android.hardware.bluetooth_le"
-        android:required="true" />
+    <uses-permission android:name="com.samsung.WATCH_APP_TYPE.Companion" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -27,17 +22,12 @@
      Android 10 (API level 29). -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-
-
-
     <!-- The application can be only used in case you have BLE in your mobile -->
-
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
     <application
-
         android:name=".IoTStarterApplication"
         android:allowBackup="true"
         android:icon="@drawable/logoapp"
@@ -46,34 +36,31 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">  <!-- needed to connect to the api res using http instead of https -->
-        <activity android:name=".DeviceDashboard"
-                android:launchMode="singleInstance"
-        />
-        <service android:name=".ble.BluetoothLeService" android:enabled="true"/>
-        <activity android:name=".DeviceScanActivity"
-            android:launchMode="singleInstance"
-        />
+        <activity
+            android:name=".DeviceDashboard"
+            android:launchMode="singleInstance" />
 
+        <service
+            android:name=".ble.BluetoothLeService"
+            android:enabled="true" />
 
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+        <service android:name="org.pyrrha_platform.galaxy.ConsumerService" /> <!-- For smartwatch -->
+
+        <activity
+            android:name=".DeviceScanActivity"
+            android:launchMode="singleInstance" />
         <activity
             android:name=".ui.login.LoginActivity"
             android:launchMode="singleInstance"> <!-- ConsumerActivity -->
             <intent-filter>
-                    <action android:name="android.intent.action.MAIN" />
-
-                    <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
-
-        <service android:name="org.pyrrha_platform.galaxy.ConsumerService" /> <!-- For smartwatch -->
 
         <meta-data
             android:name="AccessoryServicesLocation"
             android:value="/res/xml/accessoryservices.xml" />
-
-
     </application>
-
 </manifest>

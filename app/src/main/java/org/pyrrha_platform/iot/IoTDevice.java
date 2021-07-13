@@ -23,17 +23,16 @@ import java.util.Set;
  * Provides functionality to create a Set object for easy saving of properties on the device.
  */
 public class IoTDevice {
-    private String deviceName;
-    private String organization;
-    private String deviceType;
-    private String deviceID;
-    private String authorizationToken;
-
     private static final String NAME_PREFIX = "name:";
     private static final String ORG_PREFIX = "org:";
     private static final String DEVICE_TYPE_PREFIX = "type:";
     private static final String DEVICE_ID_PREFIX = "deviceId:";
     private static final String AUTH_TOKEN_PREFIX = "authToken:";
+    private String deviceName;
+    private String organization;
+    private String deviceType;
+    private String deviceID;
+    private String authorizationToken;
 
     /**
      * Create a new IoTDevice instance.

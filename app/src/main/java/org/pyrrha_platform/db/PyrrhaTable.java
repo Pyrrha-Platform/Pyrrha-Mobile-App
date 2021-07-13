@@ -1,7 +1,8 @@
 package org.pyrrha_platform.db;
 
 import androidx.annotation.NonNull;
-import androidx.room.*;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 @Entity
 public class PyrrhaTable {

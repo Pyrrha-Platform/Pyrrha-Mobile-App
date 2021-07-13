@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2016 Samsung Electronics Co., Ltd. All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that 
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that
  * the following conditions are met:
- * 
- *     * Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer. 
- *     * Redistributions in binary form must reproduce the above copyright notice, 
- *       this list of conditions and the following disclaimer in the documentation and/or 
- *       other materials provided with the distribution. 
- *     * Neither the name of Samsung Electronics Co., Ltd. nor the names of its contributors may be used to endorse or 
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright notice,
+ *       this list of conditions and the following disclaimer in the documentation and/or
+ *       other materials provided with the distribution.
+ *     * Neither the name of Samsung Electronics Co., Ltd. nor the names of its contributors may be used to endorse or
  *       promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
@@ -30,12 +30,13 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.pyrrha_platform.R;
 import com.samsung.android.sdk.SsdkUnsupportedException;
 import com.samsung.android.sdk.accessory.SA;
 import com.samsung.android.sdk.accessory.SAAgent;
 import com.samsung.android.sdk.accessory.SAMessage;
 import com.samsung.android.sdk.accessory.SAPeerAgent;
+
+import org.pyrrha_platform.R;
 
 import java.io.IOException;
 
@@ -127,6 +128,7 @@ public class ConsumerService extends SAAgent {
         mSAPeerAgent = null;
         super.onDestroy();
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -136,7 +138,7 @@ public class ConsumerService extends SAAgent {
     protected void onFindPeerAgentsResponse(SAPeerAgent[] peerAgents, int result) {
         if ((result == SAAgent.PEER_AGENT_FOUND) && (peerAgents != null)) {
             Toast.makeText(getApplicationContext(), "PEERAGENT_FOUND", Toast.LENGTH_LONG).show();
-            for(SAPeerAgent peerAgent:peerAgents) {
+            for (SAPeerAgent peerAgent : peerAgents) {
                 mSAPeerAgent = peerAgent;
             }
         } else if (result == SAAgent.FINDPEER_DEVICE_NOT_CONNECTED) {
@@ -171,12 +173,6 @@ public class ConsumerService extends SAAgent {
         });
     }
 
-    public class LocalBinder extends Binder {
-        public ConsumerService getService() {
-            return ConsumerService.this;
-        }
-    }
-
     public void findPeers() {
         findPeerAgents();
     }
@@ -184,8 +180,8 @@ public class ConsumerService extends SAAgent {
     public int sendData(String message) {
         int tid;
 
-        if(mSAPeerAgent == null) {
-            Toast.makeText(getApplicationContext(),"Try to find PeerAgent!", Toast.LENGTH_SHORT).show();
+        if (mSAPeerAgent == null) {
+            Toast.makeText(getApplicationContext(), "Try to find PeerAgent!", Toast.LENGTH_SHORT).show();
             return -1;
         }
         if (mMessage != null) {
@@ -229,13 +225,13 @@ public class ConsumerService extends SAAgent {
     }
 
     public void clearToast() {
-        if(mToast != null) {
+        if (mToast != null) {
             mToast.cancel();
         }
     }
 
     private void displayToast(String str, int duration) {
-        if(mToast != null) {
+        if (mToast != null) {
             mToast.cancel();
         }
         mToast = Toast.makeText(getApplicationContext(), str, duration);
@@ -259,5 +255,11 @@ public class ConsumerService extends SAAgent {
                 ConsumerActivity.addMessage(strToUI);
             }
         });
+    }
+
+    public class LocalBinder extends Binder {
+        public ConsumerService getService() {
+            return ConsumerService.this;
+        }
     }
 }

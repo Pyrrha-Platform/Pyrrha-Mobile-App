@@ -34,17 +34,23 @@ import java.util.TimerTask;
  * Output from these sensors is used to publish accel event messages.
  */
 public class DeviceSensor implements SensorEventListener {
-    private final String TAG = DeviceSensor.class.getName();
     private static DeviceSensor instance;
+    private final String TAG = DeviceSensor.class.getName();
     private final IoTStarterApplication app;
     private final SensorManager sensorManager;
     private final Sensor accelerometer;
     private final Sensor magnetometer;
     private final Context context;
+    private final float[] R = new float[9]; // rotation matrix
+    private final float[] I = new float[9]; // inclination matrix
     private Timer timer;
     private long tripId;
     private boolean isEnabled = false;
-
+    // Values used for accelerometer, magnetometer, orientation sensor data
+    private float[] G = new float[3]; // gravity x,y,z
+    private float[] M = new float[3]; // geomagnetic field x,y,z
+    private float[] O = new float[3]; // orientation azimuth, pitch, roll
+    private float yaw;
     private DeviceSensor(Context context) {
         this.context = context;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -91,14 +97,6 @@ public class DeviceSensor implements SensorEventListener {
             isEnabled = false;
         }
     }
-
-    // Values used for accelerometer, magnetometer, orientation sensor data
-    private float[] G = new float[3]; // gravity x,y,z
-    private float[] M = new float[3]; // geomagnetic field x,y,z
-    private final float[] R = new float[9]; // rotation matrix
-    private final float[] I = new float[9]; // inclination matrix
-    private float[] O = new float[3]; // orientation azimuth, pitch, roll
-    private float yaw;
 
     /**
      * Callback for processing data from the registered sensors. Accelerometer and magnetometer
