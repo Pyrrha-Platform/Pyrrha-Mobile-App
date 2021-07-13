@@ -19,7 +19,7 @@ public class PyrrhaEvent {
         return this.firefighter_id;
     }
 
-    public void setFirefighter_id(String firefighter_id)    {
+    public void setFirefighter_id(String firefighter_id) {
         this.firefighter_id = firefighter_id;
     }
 
@@ -35,7 +35,7 @@ public class PyrrhaEvent {
         return this.device_battery_level;
     }
 
-    public void setDevice_battery_level(String device_battery_level)  {
+    public void setDevice_battery_level(String device_battery_level) {
         this.device_battery_level = device_battery_level;
     }
 

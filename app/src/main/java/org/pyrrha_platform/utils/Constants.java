@@ -22,38 +22,31 @@ public class Constants {
 
     public final static String APP_ID = "com.ibm.iot.android.iotstarter";
     public final static String SETTINGS = APP_ID + ".Settings";
-
-    public enum ActionStateStatus {
-        CONNECTING, DISCONNECTING, SUBSCRIBE, PUBLISH
-    }
-
     // IoT properties
     public final static String AUTH_TOKEN = "authtoken";
     public final static String DEVICE_ID = "deviceid";
     public final static String ORGANIZATION = "organization";
     public final static String DEVICE_TYPE = "PyrrhaDevice";
-
     // IoT events and commands
     public final static String ALERT_EVENT = "alert";
     public final static String TEXT_EVENT = "text";
-
     public final static String CONNECTIVITY_MESSAGE = "connectivityMessage";
     public final static String ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED = Constants.APP_ID + "." + "CONNECTIVITY_MESSAGE_RECEIVED";
-
     // Fragment intents
     public final static String INTENT_LOGIN = "INTENT_LOGIN";
     public final static String INTENT_IOT = "INTENT_IOT";
     public final static String INTENT_LOG = "INTENT_LOG";
     public final static String INTENT_PROFILES = "INTENT_PROFILES";
-
     public final static String INTENT_DATA = "data";
-
     // MQTT action intent data
     public final static String INTENT_DATA_CONNECT = "connect";
     public final static String INTENT_DATA_DISCONNECT = "disconnect";
     public final static String INTENT_DATA_PUBLISHED = "publish";
     public final static String INTENT_DATA_RECEIVED = "receive";
     public final static String INTENT_DATA_MESSAGE = "message";
-
     public final static int ERROR_BROKER_UNAVAILABLE = 3;
+
+    public enum ActionStateStatus {
+        CONNECTING, DISCONNECTING, SUBSCRIBE, PUBLISH
+    }
 }

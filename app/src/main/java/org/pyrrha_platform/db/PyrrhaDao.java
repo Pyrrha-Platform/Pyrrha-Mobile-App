@@ -1,6 +1,10 @@
 package org.pyrrha_platform.db;
 
-import androidx.room.*;
+import androidx.room.Dao;
+import androidx.room.Delete;
+import androidx.room.Insert;
+import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -13,7 +17,7 @@ public interface PyrrhaDao {
     void insertAll(PyrrhaTable... pyrrhaTable);
 
     @Update
-    public void updateUsers(PyrrhaTable... pyrrhaTable);
+    void updateUsers(PyrrhaTable... pyrrhaTable);
 
     @Delete
     void delete(PyrrhaTable pyrrhaTable);

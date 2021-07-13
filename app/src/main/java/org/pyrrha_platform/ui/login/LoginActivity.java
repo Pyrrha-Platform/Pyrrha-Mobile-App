@@ -43,20 +43,17 @@ public class LoginActivity extends AppCompatActivity {
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
         final String user;
 
-        SharedPreferences prefe = getSharedPreferences("user_session",Context.MODE_PRIVATE);
+        SharedPreferences prefe = getSharedPreferences("user_session", Context.MODE_PRIVATE);
 
-        user = prefe.getString("user",null);
+        user = prefe.getString("user", null);
 
-        if ( user != null) {
+        if (user != null) {
             // We go to the main activity after the login
             Intent intent;
-
             intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
             intent.putExtra(DeviceScanActivity.USER_ID, user);
-
             startActivity(intent);
         }
-
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
             @Override
@@ -89,14 +86,12 @@ public class LoginActivity extends AppCompatActivity {
 
                     setResult(Activity.RESULT_OK);
 
-
                     //Complete and destroy login activity once successful
                     //finish();
 
                     // We save the logged user and maintain the session opened
-
-                    SharedPreferences user_session=getSharedPreferences("user_session", Context.MODE_PRIVATE);
-                    Editor editor=user_session.edit();
+                    SharedPreferences user_session = getSharedPreferences("user_session", Context.MODE_PRIVATE);
+                    Editor editor = user_session.edit();
                     editor.putString("user", loginResult.getSuccess().getUserToken());
                     editor.commit();
 
@@ -132,12 +127,12 @@ public class LoginActivity extends AppCompatActivity {
         usernameEditText.addTextChangedListener(afterTextChangedListener);
         passwordEditText.addTextChangedListener(afterTextChangedListener);
         passwordEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    loginViewModel.login(usernameEditText.getText().toString(),
-                            passwordEditText.getText().toString());
+                    loginViewModel.login(
+                            usernameEditText.getText().toString(), passwordEditText.getText().toString()
+                    );
                 }
                 return false;
             }
@@ -147,10 +142,11 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 loadingProgressBar.setVisibility(View.VISIBLE);
-                loginViewModel.login(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString());
+                loginViewModel.login(
+                        usernameEditText.getText().toString(),
+                        passwordEditText.getText().toString()
+                );
                 loginButton.setEnabled(true);
-
             }
         });
     }

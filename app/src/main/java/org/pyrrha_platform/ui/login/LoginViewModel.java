@@ -7,17 +7,17 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.ibm.cloud.appid.android.api.AppID;
 import com.ibm.cloud.appid.android.api.AppIDAuthorizationManager;
 import com.ibm.cloud.appid.android.api.AuthorizationException;
 import com.ibm.cloud.appid.android.api.TokenResponseListener;
 import com.ibm.cloud.appid.android.api.tokens.AccessToken;
 import com.ibm.cloud.appid.android.api.tokens.IdentityToken;
 import com.ibm.cloud.appid.android.api.tokens.RefreshToken;
+
 import org.pyrrha_platform.R;
 import org.pyrrha_platform.login.LoginDataSource;
 import org.pyrrha_platform.login.LoginRepository;
-import com.ibm.cloud.appid.android.api.AppID;
-
 
 
 public class LoginViewModel extends ViewModel {
@@ -28,16 +28,14 @@ public class LoginViewModel extends ViewModel {
     private AppID appId;
     private AppIDAuthorizationManager appIDAuthorizationManager;
 
-
-    private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
-    private MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
-    private LoginRepository loginRepository;
-    private Context mcontext;
+    private final MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
+    private final MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
+    private final LoginRepository loginRepository;
+    private final Context mcontext;
 
     LoginViewModel(LoginRepository loginRepository, Context context) {
         this.loginRepository = loginRepository;
         this.mcontext = context;
-
     }
 
     LiveData<LoginFormState> getLoginFormState() {
@@ -52,22 +50,20 @@ public class LoginViewModel extends ViewModel {
         this.appId = AppID.getInstance();
         appId.initialize(this.mcontext, authTenantId, region);
         this.appIDAuthorizationManager = new AppIDAuthorizationManager(this.appId);
-        this.appId.getInstance().signinWithResourceOwnerPassword(this.mcontext, username, password, new TokenResponseListener() {
+        AppID.getInstance().signinWithResourceOwnerPassword(this.mcontext, username, password, new TokenResponseListener() {
             @Override
-            public void onAuthorizationFailure (AuthorizationException exception) {
-                //Exception occurred
+            public void onAuthorizationFailure(AuthorizationException exception) {
+                // Exception occurred
                 loginResult.postValue(new LoginResult(R.string.login_failed));
             }
 
             @Override
-            public void onAuthorizationSuccess (AccessToken accessToken, IdentityToken identityToken, RefreshToken refreshToken) {
-                //User authenticated
+            public void onAuthorizationSuccess(AccessToken accessToken, IdentityToken identityToken, RefreshToken refreshToken) {
+                // User authenticated
                 loginResult.postValue(new LoginResult(new LoggedInUserView(identityToken.getName(), identityToken.getSubject())));
                 System.out.println(identityToken.getSubject());
-
             }
         });
-
     }
 
     public void loginDataChanged(String username, String password) {

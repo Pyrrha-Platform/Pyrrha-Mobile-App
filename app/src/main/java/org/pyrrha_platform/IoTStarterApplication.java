@@ -38,36 +38,27 @@ import java.util.Set;
  */
 public class IoTStarterApplication extends Application {
     private final static String TAG = IoTStarterApplication.class.getName();
-
+    // Message log for log activity
+    private final ArrayList<String> messageLog = new ArrayList<String>();
+    private final List<IoTDevice> profiles = new ArrayList<IoTDevice>();
+    private final ArrayList<String> profileNames = new ArrayList<String>();
     private boolean tutorialShown = false;
-
     // Current activity of the application, updated whenever activity is changed
     private String currentRunningActivity;
-
     // Values needed for connecting to IoT
     private String organization;
     private String deviceType;
     private String deviceId;
     private String authToken;
     private boolean useSSL = true;
-
     private SharedPreferences settings;
-
     private MyIoTCallbacks myIoTCallbacks;
-
     // Application state variables
     private boolean connected = false;
     private int publishCount = 0;
     private int receiveCount = 0;
     private int unreadCount = 0;
-
     private int color = Color.argb(1, 58, 74, 83);
-
-    // Message log for log activity
-    private final ArrayList<String> messageLog = new ArrayList<String>();
-
-    private final List<IoTDevice> profiles = new ArrayList<IoTDevice>();
-    private final ArrayList<String> profileNames = new ArrayList<String>();
 
     /**
      * Called when the application is created. Initializes the application.
@@ -358,12 +349,12 @@ public class IoTStarterApplication extends Application {
         return myIoTCallbacks;
     }
 
-    public void setDeviceType(String deviceType) {
-        this.deviceType = deviceType;
-    }
-
     public String getDeviceType() {
         return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
     }
 
     public boolean isUseSSL() {

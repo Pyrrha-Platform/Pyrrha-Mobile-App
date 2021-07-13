@@ -1,12 +1,13 @@
 package org.pyrrha_platform.ui.login;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import org.pyrrha_platform.login.LoginDataSource;
 import org.pyrrha_platform.login.LoginRepository;
-import android.content.Context;
 
 /**
  * ViewModel provider factory to instantiate LoginViewModel.
@@ -14,7 +15,7 @@ import android.content.Context;
  */
 public class LoginViewModelFactory implements ViewModelProvider.Factory {
 
-    private Context mContext;
+    private final Context mContext;
 
     public LoginViewModelFactory(Context context) {
         mContext = context;

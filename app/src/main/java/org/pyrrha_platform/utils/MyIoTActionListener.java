@@ -19,12 +19,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pyrrha_platform.IoTStarterApplication;
 import org.pyrrha_platform.iot.IoTActionListener;
 import org.pyrrha_platform.iot.IoTClient;
-
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 /**
  * This class implements the IMqttActionListener interface of the MQTT Client.
@@ -38,7 +37,6 @@ public class MyIoTActionListener implements IoTActionListener {
     private final Context context;
     private final Constants.ActionStateStatus action;
     private final IoTStarterApplication app;
-
 
     public MyIoTActionListener(Context context, Constants.ActionStateStatus action) {
         this.context = context;
@@ -130,7 +128,7 @@ public class MyIoTActionListener implements IoTActionListener {
         //if (runningActivity != null && runningActivity.equals(LoginPagerFragment.class.getName())) {
         Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
         actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_CONNECT);
-//        context.sendBroadcast(actionIntent);
+        //  context.sendBroadcast(actionIntent);
         //}
     }
 
@@ -181,7 +179,7 @@ public class MyIoTActionListener implements IoTActionListener {
         //if (runningActivity != null && runningActivity.equals(LoginPagerFragment.class.getName())) {
         Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
         actionIntent.putExtra(Constants.INTENT_DATA, Constants.INTENT_DATA_DISCONNECT);
-//        context.sendBroadcast(actionIntent);
+        // context.sendBroadcast(actionIntent);
         //}
 
         //also broadcast an alert event so user sees error message
@@ -190,7 +188,7 @@ public class MyIoTActionListener implements IoTActionListener {
         Intent alertIntent = new Intent(Constants.APP_ID + Constants.INTENT_LOGIN);
         alertIntent.putExtra(Constants.INTENT_DATA, Constants.ALERT_EVENT);
         alertIntent.putExtra(Constants.INTENT_DATA_MESSAGE, errMsg);
-//        context.sendBroadcast(alertIntent);
+        // context.sendBroadcast(alertIntent);
 
         Log.e(TAG, ".handleConnectFailure() exit");
     }
