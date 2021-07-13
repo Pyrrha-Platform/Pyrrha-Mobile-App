@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 public class ConsumerActivity extends Activity {
     private static TextView mTextView;
     private static MessageAdapter mMessageAdapter;

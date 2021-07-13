@@ -6,8 +6,9 @@ This repository contains the [Pyrrha](https://github.com/Pyrrha-Platform/Pyrrha)
 
 ## Setting up the solution
 
-- Install Android Studio
-- Add Samsung SDKs for the device and the watch
+- [Install Android Studio](https://developer.android.com/studio)
+- [Add the Samsung device skin for your target device](https://developer.samsung.com/galaxy-emulator-skin/guide.html)
+- [Add the Samsung Accessory SDKs for the watch](https://developer.samsung.com/galaxy-accessory)
 
 ## Contributing
 
