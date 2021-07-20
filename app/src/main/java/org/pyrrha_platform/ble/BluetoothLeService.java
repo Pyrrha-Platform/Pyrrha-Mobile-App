@@ -240,7 +240,7 @@ public class BluetoothLeService extends Service {
      * callback.
      *
      * @param characteristic The characteristic to read from.
-     * @return
+     * @return characteristic The characteristic read from.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public BluetoothGattCharacteristic readCharacteristic(BluetoothGattCharacteristic characteristic) {
