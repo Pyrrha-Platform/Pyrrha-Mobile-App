@@ -66,6 +66,10 @@ public class DeviceDashboard extends AppCompatActivity {
     private final static String TAG = DeviceDashboard.class.getSimpleName();
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
+    private final UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
+    private final UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
+    private final UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
+    private final UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
     Button valueTemperature;
     Button valueHumidity;
     Button valueCO;
@@ -74,7 +78,7 @@ public class DeviceDashboard extends AppCompatActivity {
     ImageView imgConnectivity;
     Handler handler = new Handler();
     Context context;
-    IoTStarterApplication app;
+    PyrrhaApplication app;
     BroadcastReceiver iotBroadCastReceiver;
     Call<StatusCloud> callStatus;
     Retrofit retrofit;
@@ -112,12 +116,6 @@ public class DeviceDashboard extends AppCompatActivity {
     private BluetoothGattCharacteristic mGattStatusCloud;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
-    // Variable to maintain the app connected in mobile sleeping mode
-    private PowerManager.WakeLock mWakeLock;
-    private final UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
-    private final UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
-    private final UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
-    private final UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
     // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
@@ -164,6 +162,8 @@ public class DeviceDashboard extends AppCompatActivity {
             }
         }
     };
+    // Variable to maintain the app connected in mobile sleeping mode
+    private PowerManager.WakeLock mWakeLock;
     private BluetoothGattService mGattService;
 
     private static IntentFilter makeGattUpdateIntentFilter() {
@@ -236,7 +236,7 @@ public class DeviceDashboard extends AppCompatActivity {
         context = this.getApplicationContext();
         // connect to the IoT platform and send random readings for now
         // how are these variables entered? How are they updated in the Application?
-        app = (IoTStarterApplication) this.getApplication();
+        app = (PyrrhaApplication) this.getApplication();
         app.setCurrentRunningActivity(TAG);
 
         if (iotBroadCastReceiver == null) {
@@ -574,9 +574,9 @@ public class DeviceDashboard extends AppCompatActivity {
                 }
 
             }
-//            if (imgBluetooh.getVisibility() == View.VISIBLE) {
-//                imgBluetooh.setVisibility(View.INVISIBLE);
-//            }
+            //  if (imgBluetooh.getVisibility() == View.VISIBLE) {
+            //      imgBluetooh.setVisibility(View.INVISIBLE);
+            //  }
         } catch (Exception e) {
             imgBluetooh.setVisibility(View.VISIBLE);
         }
@@ -592,7 +592,7 @@ public class DeviceDashboard extends AppCompatActivity {
         Date time_date_pyrrha_device = new Date();
 
 
-//        mGattService = mBluetoothLeService.getGattService(uuidService);
+        // mGattService = mBluetoothLeService.getGattService(uuidService);
         mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
 
         if (mGattDateTime != null) {

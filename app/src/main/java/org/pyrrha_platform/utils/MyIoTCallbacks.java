@@ -22,7 +22,7 @@ import android.util.Log;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.pyrrha_platform.DeviceDashboard;
-import org.pyrrha_platform.IoTStarterApplication;
+import org.pyrrha_platform.PyrrhaApplication;
 import org.pyrrha_platform.iot.IoTCallbacks;
 
 /**
@@ -32,10 +32,10 @@ public class MyIoTCallbacks implements IoTCallbacks {
     private final static String TAG = MyIoTCallbacks.class.getName();
     private static MyIoTCallbacks myIoTCallbacks;
     private final Context context;
-    private final IoTStarterApplication app;
+    private final PyrrhaApplication app;
 
     public MyIoTCallbacks(Context context) {
-        this.app = (IoTStarterApplication) context;
+        this.app = (PyrrhaApplication) context;
         this.context = context;
     }
 

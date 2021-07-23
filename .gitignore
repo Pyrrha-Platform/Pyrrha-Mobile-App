@@ -1,6 +1,7 @@
 *.iml
 .gradle
 /local.properties
+/pyrrha.properties
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -18,3 +19,4 @@
 app/.classpath
 app/.project
 app/.settings/
+/.vscode

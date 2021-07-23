@@ -20,7 +20,7 @@ import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
-import org.pyrrha_platform.IoTStarterApplication;
+import org.pyrrha_platform.PyrrhaApplication;
 
 /**
  * Steer incoming MQTT messages to the proper activities based on their content.
@@ -30,11 +30,11 @@ public class MessageConductor {
     private final static String TAG = MessageConductor.class.getName();
     private static MessageConductor instance;
     private final Context context;
-    private final IoTStarterApplication app;
+    private final PyrrhaApplication app;
 
     private MessageConductor(Context context) {
         this.context = context;
-        app = (IoTStarterApplication) context.getApplicationContext();
+        app = (PyrrhaApplication) context.getApplicationContext();
     }
 
     public static MessageConductor getInstance(Context context) {

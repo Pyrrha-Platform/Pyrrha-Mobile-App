@@ -15,6 +15,7 @@ import com.ibm.cloud.appid.android.api.tokens.AccessToken;
 import com.ibm.cloud.appid.android.api.tokens.IdentityToken;
 import com.ibm.cloud.appid.android.api.tokens.RefreshToken;
 
+import org.pyrrha_platform.BuildConfig;
 import org.pyrrha_platform.R;
 import org.pyrrha_platform.login.LoginDataSource;
 import org.pyrrha_platform.login.LoginRepository;
@@ -23,7 +24,7 @@ import org.pyrrha_platform.login.LoginRepository;
 public class LoginViewModel extends ViewModel {
     private final static String TAG = LoginDataSource.class.getName();
     private final static String region = AppID.REGION_UK;
-    private final static String authTenantId = "2e5771a5-80bf-4879-bbf9-d5135ccde03a";
+    private final static String authTenantId = BuildConfig.PYRRHA_APP_ID_SERVICE_TENANT;
 
     private AppID appId;
     private AppIDAuthorizationManager appIDAuthorizationManager;

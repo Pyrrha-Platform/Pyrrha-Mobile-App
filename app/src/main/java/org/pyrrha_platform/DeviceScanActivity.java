@@ -39,10 +39,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     ArrayList<String> addresses = new ArrayList<>();
     ArrayList<String> deviceNames = new ArrayList<>();
     private ArrayAdapter mLeDeviceListAdapter;
-    private BluetoothAdapter mBluetoothAdapter;
-    private boolean mScanning;
-    private Handler mHandler;
-    private String user_id;
     // Device scan callback.
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private final BluetoothAdapter.LeScanCallback mLeScanCallback =
@@ -67,6 +63,10 @@ public class DeviceScanActivity extends AppCompatActivity {
                     });
                 }
             };
+    private BluetoothAdapter mBluetoothAdapter;
+    private boolean mScanning;
+    private Handler mHandler;
+    private String user_id;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
