@@ -37,7 +37,7 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
     public final static UUID UUID_PYRRHA_MEASUREMENT =
-            UUID.fromString(GattAttributes.PYRRHA_MEASUREMENT);
+            UUID.fromString(GattAttributes.PYRRHA_SENSORS_MEASUREMENT);
     private final static String TAG = BluetoothLeService.class.getSimpleName();
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;

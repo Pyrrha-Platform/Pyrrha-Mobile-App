@@ -23,7 +23,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-import org.pyrrha_platform.IoTStarterApplication;
+import org.pyrrha_platform.PyrrhaApplication;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,7 +36,7 @@ import java.util.TimerTask;
 public class DeviceSensor implements SensorEventListener {
     private static DeviceSensor instance;
     private final String TAG = DeviceSensor.class.getName();
-    private final IoTStarterApplication app;
+    private final PyrrhaApplication app;
     private final SensorManager sensorManager;
     private final Sensor accelerometer;
     private final Sensor magnetometer;
@@ -51,12 +51,13 @@ public class DeviceSensor implements SensorEventListener {
     private float[] M = new float[3]; // geomagnetic field x,y,z
     private float[] O = new float[3]; // orientation azimuth, pitch, roll
     private float yaw;
+
     private DeviceSensor(Context context) {
         this.context = context;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        app = (IoTStarterApplication) context.getApplicationContext();
+        app = (PyrrhaApplication) context.getApplicationContext();
     }
 
     /**

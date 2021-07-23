@@ -73,3 +73,30 @@ android{
         compile.exclude group: 'org.jetbrains' , module:'annotations-java5'
     }
 }
+
+// Custom properties. This file is not in source control.
+// It needs to be created from pyrrha.properties.template
+// Source: https://medium.com/self-modifying-code/managing-your-android-project-using-gradle-properties-ab5a363351e6
+def propFile = new File("pyrrha.properties")
+
+Properties props = new Properties()
+// Check if the file exists
+if (propFile.canRead()) {
+    //Load the file
+    props.load(new FileInputStream(propFile))
+    // If we found the file lets read in all the keys and values and add those to the buildConfig section of our template.
+    if (props != null) {
+        android.buildTypes.all {
+            buildType ->
+                props.any {
+                    property ->
+                        buildType.buildConfigField "String", property.key, "\"${property.value}\""
+                }
+        }
+    } else {
+        throw new InvalidUserDataException('pyrrha.properties found, but some entries are missing')
+    }
+} else {
+    // The properties file was not found
+    throw new MissingResourceException('pyrrha.properties not found')
+}

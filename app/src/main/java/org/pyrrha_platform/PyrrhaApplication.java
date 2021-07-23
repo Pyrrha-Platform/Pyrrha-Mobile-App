@@ -36,8 +36,8 @@ import java.util.Set;
  * Main class for the IoT Starter application. Stores values for
  * important device and application information.
  */
-public class IoTStarterApplication extends Application {
-    private final static String TAG = IoTStarterApplication.class.getName();
+public class PyrrhaApplication extends Application {
+    private final static String TAG = PyrrhaApplication.class.getName();
     // Message log for log activity
     private final ArrayList<String> messageLog = new ArrayList<String>();
     private final List<IoTDevice> profiles = new ArrayList<IoTDevice>();

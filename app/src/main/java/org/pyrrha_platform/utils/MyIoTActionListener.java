@@ -21,7 +21,7 @@ import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.pyrrha_platform.IoTStarterApplication;
+import org.pyrrha_platform.PyrrhaApplication;
 import org.pyrrha_platform.iot.IoTActionListener;
 import org.pyrrha_platform.iot.IoTClient;
 
@@ -36,12 +36,12 @@ public class MyIoTActionListener implements IoTActionListener {
 
     private final Context context;
     private final Constants.ActionStateStatus action;
-    private final IoTStarterApplication app;
+    private final PyrrhaApplication app;
 
     public MyIoTActionListener(Context context, Constants.ActionStateStatus action) {
         this.context = context;
         this.action = action;
-        app = (IoTStarterApplication) context.getApplicationContext();
+        app = (PyrrhaApplication) context.getApplicationContext();
     }
 
     /**
