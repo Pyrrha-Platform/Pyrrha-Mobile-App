@@ -15,7 +15,7 @@ public class RetrofitAdapter {
 
     public Retrofit getAdapter() {
         retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.PYRRHA_RULES_DECISION_SERVICE)
+                .baseUrl(BuildConfig.FLAVOR_RULES_DECISION_SERVICE)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         return retrofit;

@@ -38,13 +38,15 @@ import java.util.Set;
  */
 public class PyrrhaApplication extends Application {
     private final static String TAG = PyrrhaApplication.class.getName();
+
     // Message log for log activity
     private final ArrayList<String> messageLog = new ArrayList<String>();
     private final List<IoTDevice> profiles = new ArrayList<IoTDevice>();
     private final ArrayList<String> profileNames = new ArrayList<String>();
-    private boolean tutorialShown = false;
+
     // Current activity of the application, updated whenever activity is changed
     private String currentRunningActivity;
+
     // Values needed for connecting to IoT
     private String organization;
     private String deviceType;
@@ -53,6 +55,7 @@ public class PyrrhaApplication extends Application {
     private boolean useSSL = true;
     private SharedPreferences settings;
     private MyIoTCallbacks myIoTCallbacks;
+
     // Application state variables
     private boolean connected = false;
     private int publishCount = 0;
@@ -89,7 +92,7 @@ public class PyrrhaApplication extends Application {
         //editor.commit();
 
         if (settings.getString("TUTORIAL_SHOWN", null) != null) {
-            tutorialShown = true;
+            boolean tutorialShown = true;
         }
 
         myIoTCallbacks = MyIoTCallbacks.getInstance(this);

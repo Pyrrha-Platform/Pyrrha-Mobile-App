@@ -30,9 +30,9 @@
     <application
         android:name=".PyrrhaApplication"
         android:allowBackup="true"
-        android:icon="@drawable/logoapp"
+        android:icon="@drawable/pyrrha_app_icon"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/logoapp"
+        android:roundIcon="@drawable/pyrrha_app_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">  <!-- needed to connect to the api res using http instead of https -->

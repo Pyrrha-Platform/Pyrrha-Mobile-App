@@ -101,7 +101,6 @@ public class DeviceScanActivity extends AppCompatActivity {
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
             finish();
-            return;
         }
     }
 

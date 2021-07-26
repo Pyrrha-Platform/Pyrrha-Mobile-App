@@ -36,8 +36,8 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
-    public final static UUID UUID_PYRRHA_MEASUREMENT =
-            UUID.fromString(GattAttributes.PYRRHA_SENSORS_MEASUREMENT);
+    public final static UUID UUID_FLAVOR_MEASUREMENT =
+            UUID.fromString(GattAttributes.FLAVOR_SENSORS_MEASUREMENT);
     private final static String TAG = BluetoothLeService.class.getSimpleName();
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -181,7 +181,7 @@ public class BluetoothLeService extends Service {
         }
 
         // Previously connected device.  Try to reconnect.
-        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
+        if (address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
@@ -268,7 +268,7 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
         //     // This is specific Pyrrha Device Measurement.
-        //     if (UUID_PYRRHA_MEASUREMENT.equals(characteristic.getUuid())) {
+        //     if (UUID_FLAVOR_MEASUREMENT.equals(characteristic.getUuid())) {
         //            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
         //                    UUID.fromString(GattAttributes.));
         //            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);

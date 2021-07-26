@@ -7,16 +7,16 @@ import java.util.HashMap;
 
 public class GattAttributes {
 
-    public static String PYRRHA_SENSORS_MEASUREMENT = BuildConfig.PYRRHA_SENSORS_MEASUREMENT;
+    public static final String FLAVOR_SENSORS_MEASUREMENT = BuildConfig.FLAVOR_SENSORS_MEASUREMENT;
     private static final HashMap<String, String> attributes = new HashMap();
 
     static {
 
         // Sample Services.
-        attributes.put(BuildConfig.PYRRHA_DEVICE_SERVICE, "Pyrrha Device Service");
+        attributes.put(BuildConfig.FLAVOR_DEVICE_SERVICE, BuildConfig.FLAVOR_DEVICE_SERVICE_LABEL);
 
         // Sample Characteristics.
-        attributes.put(BuildConfig.PYRRHA_SENSORS_MEASUREMENT, "Pyrrha Sensors Measurement");
+        attributes.put(BuildConfig.FLAVOR_SENSORS_MEASUREMENT, BuildConfig.FLAVOR_SENSORS_MEASUREMENT_LABEL);
 
     }
 

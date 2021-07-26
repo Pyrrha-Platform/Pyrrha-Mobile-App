@@ -139,12 +139,11 @@ public class IoTClient {
             client = new MqttAndroidClient(context, connectionURI, clientID);
             client.setCallback(callbacks);
 
-            String username = IOT_DEVICE_USERNAME;
             char[] password = this.getAuthorizationToken().toCharArray();
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(true);
-            options.setUserName(username);
+            options.setUserName(IOT_DEVICE_USERNAME);
             options.setPassword(password);
 
             if (factory != null && !this.getOrganization().equals("quickstart")) {

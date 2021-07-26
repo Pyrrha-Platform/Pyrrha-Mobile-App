@@ -29,12 +29,9 @@ public class MessageConductor {
 
     private final static String TAG = MessageConductor.class.getName();
     private static MessageConductor instance;
-    private final Context context;
-    private final PyrrhaApplication app;
 
     private MessageConductor(Context context) {
-        this.context = context;
-        app = (PyrrhaApplication) context.getApplicationContext();
+        PyrrhaApplication app = (PyrrhaApplication) context.getApplicationContext();
     }
 
     public static MessageConductor getInstance(Context context) {

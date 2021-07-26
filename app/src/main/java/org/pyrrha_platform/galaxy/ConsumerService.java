@@ -44,7 +44,7 @@ public class ConsumerService extends SAAgent {
     private static final String TAG = "HelloMessage(C)";
 
     private final IBinder mBinder = new LocalBinder();
-    Handler mHandler = new Handler();
+    final Handler mHandler = new Handler();
     private SAMessage mMessage = null;
     private SAPeerAgent mSAPeerAgent = null;
     private Toast mToast;
@@ -61,7 +61,7 @@ public class ConsumerService extends SAAgent {
             mAccessory.initialize(this);
         } catch (SsdkUnsupportedException e) {
             // try to handle SsdkUnsupportedException
-            if (processUnsupportedException(e) == true) {
+            if (processUnsupportedException(e)) {
                 return;
             }
         } catch (Exception e1) {
