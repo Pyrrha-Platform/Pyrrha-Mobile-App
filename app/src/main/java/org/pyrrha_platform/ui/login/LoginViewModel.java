@@ -24,18 +24,13 @@ import org.pyrrha_platform.login.LoginRepository;
 public class LoginViewModel extends ViewModel {
     private final static String TAG = LoginDataSource.class.getName();
     private final static String region = AppID.REGION_UK;
-    private final static String authTenantId = BuildConfig.PYRRHA_APP_ID_SERVICE_TENANT;
-
-    private AppID appId;
-    private AppIDAuthorizationManager appIDAuthorizationManager;
+    private final static String authTenantId = BuildConfig.FLAVOR_APP_ID_SERVICE_TENANT;
 
     private final MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private final MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
-    private final LoginRepository loginRepository;
     private final Context mcontext;
 
     LoginViewModel(LoginRepository loginRepository, Context context) {
-        this.loginRepository = loginRepository;
         this.mcontext = context;
     }
 
@@ -48,9 +43,9 @@ public class LoginViewModel extends ViewModel {
     }
 
     public void login(String username, String password) {
-        this.appId = AppID.getInstance();
+        AppID appId = AppID.getInstance();
         appId.initialize(this.mcontext, authTenantId, region);
-        this.appIDAuthorizationManager = new AppIDAuthorizationManager(this.appId);
+        AppIDAuthorizationManager appIDAuthorizationManager = new AppIDAuthorizationManager(appId);
         AppID.getInstance().signinWithResourceOwnerPassword(this.mcontext, username, password, new TokenResponseListener() {
             @Override
             public void onAuthorizationFailure(AuthorizationException exception) {

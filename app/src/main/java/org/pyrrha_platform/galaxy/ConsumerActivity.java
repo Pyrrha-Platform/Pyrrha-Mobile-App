@@ -93,7 +93,7 @@ public class ConsumerActivity extends Activity {
     @Override
     protected void onDestroy() {
         // Clean up connections
-        if (mIsBound == true && mConsumerService != null) {
+        if (mIsBound && mConsumerService != null) {
             updateTextView("Disconnected");
             mMessageAdapter.clear();
             mConsumerService.clearToast();

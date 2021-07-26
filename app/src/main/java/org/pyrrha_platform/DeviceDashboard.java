@@ -66,17 +66,17 @@ public class DeviceDashboard extends AppCompatActivity {
     private final static String TAG = DeviceDashboard.class.getSimpleName();
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
-    private final UUID uuidService = UUID.fromString("2c32fd5f-5082-437e-8501-959d23d3d2fb");
-    private final UUID uuidCharacteristic = UUID.fromString("dcaaccb4-c1d1-4bc4-b406-8f6f45df0208");
-    private final UUID uuidDateTime = UUID.fromString("e39c34e9-d574-47fc-a66e-425cec812aab");
-    private final UUID uuidStatusCloud = UUID.fromString("125ad2af-97cd-4f7a-b1e2-5109561f740d");
+    private final UUID uuidService = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_SERVICE);
+    private final UUID uuidCharacteristic = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_CHARACTERISTIC);
+    private final UUID uuidDateTime = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_DATE_TIME);
+    private final UUID uuidStatusCloud = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_STATUS_CLOUD);
     Button valueTemperature;
     Button valueHumidity;
     Button valueCO;
     Button valueNO2;
     ImageView imgBluetooh;
     ImageView imgConnectivity;
-    Handler handler = new Handler();
+    final Handler handler = new Handler();
     Context context;
     PyrrhaApplication app;
     BroadcastReceiver iotBroadCastReceiver;
@@ -111,10 +111,6 @@ public class DeviceDashboard extends AppCompatActivity {
             mBluetoothLeService = null;
         }
     };
-    private BluetoothGattCharacteristic mGattCharacteristic;
-    private BluetoothGattCharacteristic mGattDateTime;
-    private BluetoothGattCharacteristic mGattStatusCloud;
-    private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
@@ -128,6 +124,7 @@ public class DeviceDashboard extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            boolean mConnected = false;
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 imgBluetooh.setVisibility(View.INVISIBLE);
@@ -256,8 +253,8 @@ public class DeviceDashboard extends AppCompatActivity {
 
         app.setDeviceType(Constants.DEVICE_TYPE);
         app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
-        app.setOrganization("p0g2ka");
-        app.setAuthToken("pyrrhapriegoholaquetal");
+        app.setOrganization(BuildConfig.FLAVOR_IOT_ORGANIZATION);
+        app.setAuthToken(BuildConfig.FLAVOR_IOT_TOKEN);
 
         Log.d(TAG, "We are going to create the iotClient");
         IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
@@ -357,7 +354,7 @@ public class DeviceDashboard extends AppCompatActivity {
             // We get the status from the cloud
             getStatus(pe, device_timestamp);
 
-            if (connectivity == true) {
+            if (connectivity) {
                 sendDataDatabase();
             }
         }
@@ -389,7 +386,6 @@ public class DeviceDashboard extends AppCompatActivity {
             public void onResponse(Call<StatusCloud> callStatus, Response<StatusCloud> response) {
                 if (!response.isSuccessful()) {
                     Log.d(TAG, "Error when calling to get_status: " + response.code());
-                    return;
                 } else {
 
                     System.out.println("*** Status cloud get");
@@ -511,7 +507,7 @@ public class DeviceDashboard extends AppCompatActivity {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                ArrayList<PyrrhaTable> user_query = new ArrayList<PyrrhaTable>();
+                ArrayList<PyrrhaTable> user_query;
                 System.out.println("Read the row");
                 try {
                     user_query = (ArrayList<PyrrhaTable>) db.pyrrhaDao().getAll();
@@ -551,7 +547,7 @@ public class DeviceDashboard extends AppCompatActivity {
         }
 
         try {
-            mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
+            BluetoothGattCharacteristic mGattCharacteristic = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidCharacteristic);
 
             if (mGattCharacteristic != null) {
                 final BluetoothGattCharacteristic characteristic = mGattCharacteristic;
@@ -593,7 +589,7 @@ public class DeviceDashboard extends AppCompatActivity {
 
 
         // mGattService = mBluetoothLeService.getGattService(uuidService);
-        mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
+        BluetoothGattCharacteristic mGattDateTime = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidDateTime);
 
         if (mGattDateTime != null) {
             Date currentTime = Calendar.getInstance().getTime(); // convert into utc
@@ -607,7 +603,7 @@ public class DeviceDashboard extends AppCompatActivity {
     private void updateStatusCloud(Integer status_choice) {
 
 //        mGattService = mBluetoothLeService.getGattService(uuidService);
-        mGattStatusCloud = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidStatusCloud);
+        BluetoothGattCharacteristic mGattStatusCloud = mBluetoothLeService.getGattService(uuidService).getCharacteristic(uuidStatusCloud);
 
 
         if (status_choice == -1) {

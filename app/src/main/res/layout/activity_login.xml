@@ -20,7 +20,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
-        android:background="#1764EC"
+        android:background="#3B688C"
         android:enabled="false"
         android:text="@string/action_sign_in"
         android:textColor="#FFFFFF"
@@ -38,11 +38,11 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="53dp"
         android:layout_marginEnd="24dp"
-        android:contentDescription="TODO"
+        android:contentDescription="Pyrrha mobile app"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/pyrrha_plex" />
+        app:srcCompat="@drawable/pyrrha_app_icon" />
 
     <ProgressBar
         android:id="@+id/loading"

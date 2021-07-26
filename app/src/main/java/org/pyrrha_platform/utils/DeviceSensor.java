@@ -36,28 +36,23 @@ import java.util.TimerTask;
 public class DeviceSensor implements SensorEventListener {
     private static DeviceSensor instance;
     private final String TAG = DeviceSensor.class.getName();
-    private final PyrrhaApplication app;
     private final SensorManager sensorManager;
     private final Sensor accelerometer;
     private final Sensor magnetometer;
-    private final Context context;
     private final float[] R = new float[9]; // rotation matrix
     private final float[] I = new float[9]; // inclination matrix
     private Timer timer;
-    private long tripId;
     private boolean isEnabled = false;
     // Values used for accelerometer, magnetometer, orientation sensor data
     private float[] G = new float[3]; // gravity x,y,z
     private float[] M = new float[3]; // geomagnetic field x,y,z
     private float[] O = new float[3]; // orientation azimuth, pitch, roll
-    private float yaw;
 
     private DeviceSensor(Context context) {
-        this.context = context;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        app = (PyrrhaApplication) context.getApplicationContext();
+        PyrrhaApplication app = (PyrrhaApplication) context.getApplicationContext();
     }
 
     /**
@@ -80,7 +75,7 @@ public class DeviceSensor implements SensorEventListener {
         if (!isEnabled) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
             sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
-            tripId = System.currentTimeMillis() / 1000;
+            long tripId = System.currentTimeMillis() / 1000;
             timer = new Timer();
             timer.scheduleAtFixedRate(new SendTimerTask(), 1000, 1000);
             isEnabled = true;
@@ -122,7 +117,7 @@ public class DeviceSensor implements SensorEventListener {
             if (SensorManager.getRotationMatrix(R, I, G, M)) {
                 float[] previousO = O.clone();
                 O = SensorManager.getOrientation(R, O);
-                yaw = O[0] - previousO[0];
+                float yaw = O[0] - previousO[0];
                 Log.v(TAG, "Orientation: azimuth: " + O[0] + " pitch: " + O[1] + " roll: " + O[2] + " yaw: " + yaw);
             }
         }
