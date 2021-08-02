@@ -20,16 +20,18 @@ The application is built as a [Java Android Application](https://developer.samsu
 - [Install Android Studio](https://developer.android.com/studio) and open this clone repo. The initial Gradle build will fail until we create a properties file, which we'll do later on.
 - [Review the Samsung-specific setup instructions](https://developer.samsung.com/mobile/galaxy-sdk-getting-started.html). You may need to sign up for a Samsung Developer Account to see documentation.
 - [Add the Samsung Accessory SDKs to use the watch as a consumer and smartphone (smart device) as a consumer](https://developer.samsung.com/galaxy-accessory)
-- [Add the Samsung device skin for your target device](https://developer.samsung.com/galaxy-emulator-skin/guide.html) and configure it with the AVD (Android Virtual Device) Manager. The application has been tested with the Samsung Galaxy A51 and [Galaxy XCover Pro](https://www.samsung.com/es/business/smartphones/galaxy-xcover-pro-g715/). If you can't find configure the skins, take note of their display and screen resolution specs and configure a generic simulator accordingly.
-- Copy `pyrrha.properties.template` to `pyrrha.properties` and provide your App ID and backend service configuration information.
+- [Add the Samsung device skin for your target device](https://developer.samsung.com/galaxy-emulator-skin/guide.html) and create a new hardware profile of it with the AVD (Android Virtual Device) Manager. The application has been tested with the Samsung Galaxy A51 and [Galaxy XCover Pro](https://www.samsung.com/es/business/smartphones/galaxy-xcover-pro-g715/). If you can't find configure the skins, take note of their display and screen resolution specs and configure a generic simulator accordingly.
+- Copy `pyrrha.properties.template` to `pyrrha.properties` and provide your App ID and backend service configuration information. Then sync and rebuild the project.
 
 ## Run on phone or simulator
 
-1. TBD
+1. Now that the project builds locally, you can run it on the simulator. If the app doesn't automatically launch, look for the Pyrrha app icon amongst the phone's apps.
+1. When the project launches, you'll need to log into it using an account of a user you set up in App ID.
+1. After logging in, the UI for scanning for Prometeo sensors will be shown.
 
 ## Running on a physical phone
 
-1. TBD
+1. You can run the app on a physical Samsung device over USB or over WiFi. You'll need to enable Developer mode. Details are under [Running the App](https://developer.samsung.com/mobile/galaxy-sdk-getting-started.html).
 
 ## Continue work and integrate with the Android watch app
 
