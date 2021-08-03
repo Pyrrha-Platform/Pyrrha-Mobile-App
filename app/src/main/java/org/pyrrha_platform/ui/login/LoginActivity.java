@@ -47,10 +47,8 @@ public class LoginActivity extends AppCompatActivity {
 
         user = prefe.getString("user", null);
 
-        // Log.v("LoginActivity", BuildConfig.TEST_VALUE);
-
         if (user != null) {
-            // We go to the main activity after the login
+            // We go to the device scan activity after the login
             Intent intent;
             intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
             intent.putExtra(DeviceScanActivity.USER_ID, user);

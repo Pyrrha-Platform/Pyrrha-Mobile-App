@@ -9,9 +9,9 @@ This repository contains the [Pyrrha](https://github.com/Pyrrha-Platform/Pyrrha)
 The smartphone includes features that allow it to:
 
 1. Discover and pair with a sensor device using Bluetooth Low Energy.
-1. Provide real-time information about device readings.
-1. Relay information back to the IBM Cloud.
-1. Relay information from the IBM Cloud back to the device and companion smartwatch.
+1. Provide real-time information about device readings in the app UI.
+1. Relay information up to the IBM Cloud for analysis.
+1. Relay information back from the IBM Cloud to the device and companion smartwatch.
 
 The application is built as a [Java Android Application](https://developer.samsung.com/galaxy-watch-develop/creating-your-first-app/web-companion/setup-sdk.html).
 
