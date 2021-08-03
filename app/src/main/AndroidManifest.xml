@@ -2,11 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.pyrrha_platform">
 
-    <uses-permission android:name="android.permission.BLUETOOTH" /> <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
+    <!-- If your app targets Android 9 or lower, we need to declare ACCESS_COARSE_LOCATION instead -->
+    <!-- The application can be only used in case you have BLE in your mobile device -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- The application can be only used in case you have BLE in your mobile -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!-- We include this permission for the connectivity to the galaxy watch -->
+    <!-- We include this permission for the connectivity to the Galaxy Watch -->
     <uses-permission android:name="com.samsung.accessory.permission.ACCESSORY_FRAMEWORK" />
     <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" />
     <uses-permission android:name="com.samsung.wmanager.ENABLE_NOTIFICATION" />
@@ -22,7 +24,6 @@
      Android 10 (API level 29). -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-    <!-- The application can be only used in case you have BLE in your mobile -->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
@@ -35,32 +36,42 @@
         android:roundIcon="@drawable/pyrrha_app_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">  <!-- needed to connect to the api res using http instead of https -->
-        <activity
-            android:name=".DeviceDashboard"
-            android:launchMode="singleInstance" />
+        android:usesCleartextTraffic="true">  <!-- Needed to connect to the API using HTTP instead of HTTPS -->
 
         <service
             android:name=".ble.BluetoothLeService"
             android:enabled="true" />
 
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
-        <service android:name="org.pyrrha_platform.galaxy.ConsumerService" /> <!-- For smartwatch -->
+        <!-- For IoT Platform -->
+        <service
+            android:name="org.eclipse.paho.android.service.MqttService" />
 
-        <activity
-            android:name=".DeviceScanActivity"
-            android:launchMode="singleInstance" />
+        <!-- For Galaxy Watch -->
+        <service android:name="org.pyrrha_platform.galaxy.ConsumerService" />
+
+        <meta-data
+            android:name="AccessoryServicesLocation"
+            android:value="/res/xml/accessoryservices.xml" />
+
+        <!-- Main activity is login -->
         <activity
             android:name=".ui.login.LoginActivity"
-            android:launchMode="singleInstance"> <!-- ConsumerActivity -->
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="AccessoryServicesLocation"
-            android:value="/res/xml/accessoryservices.xml" />
+        <!-- After login, we scan for Pyrrha devices -->
+        <activity
+            android:name=".DeviceScanActivity"
+            android:launchMode="singleInstance" />
+
+        <!-- We list connected Pyrrha device info -->
+        <activity
+            android:name=".DeviceDashboard"
+            android:launchMode="singleInstance" />
+
     </application>
 </manifest>

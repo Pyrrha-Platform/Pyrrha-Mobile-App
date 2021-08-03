@@ -73,24 +73,6 @@ public class PyrrhaApplication extends Application {
 
         settings = getSharedPreferences(Constants.SETTINGS, 0);
 
-        //SharedPreferences.Editor editor = settings.edit();
-        /* Start app with 0 saved settings */
-        //editor.clear();
-        /* Start app with tutorial never been seen */
-        //editor.remove("TUTORIAL_SHOWN");
-        /* Start app with original settings values */
-        //editor.putString("organization", "");
-        //editor.putString("deviceid", "");
-        //editor.putString("authtoken", "");
-        /* Start app without 'DeviceType' saved */
-        //Set<String> props = new HashSet<String>();
-        //props.add("name:");
-        //props.add("deviceId:");
-        //props.add("org:");
-        //props.add("authToken:");
-        //editor.putStringSet("testiot", props);
-        //editor.commit();
-
         if (settings.getString("TUTORIAL_SHOWN", null) != null) {
             boolean tutorialShown = true;
         }
@@ -107,6 +89,7 @@ public class PyrrhaApplication extends Application {
     @TargetApi(value = 11)
     private void createNewDefaultProfile() {
         Log.d(TAG, "organization not null. compat profile setup");
+
         // If old stored property settings exist, use them to create a new default profile.
         String organization = settings.getString(Constants.ORGANIZATION, null);
         String deviceType = Constants.DEVICE_TYPE;

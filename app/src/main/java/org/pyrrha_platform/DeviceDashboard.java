@@ -136,16 +136,13 @@ public class DeviceDashboard extends AppCompatActivity {
                 updateDateTime();
                 System.out.println("Estamos en ACTION_GATT_SERVICES_DISCOVERED");
 
-
                 handler.postDelayed(new Runnable() {
                     public void run() {
                         displayGattService();
                     }
                 }, 10000); // 10 seconds of "delay"
 
-
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-
                 Handler handler = new Handler();
 
                 handler.postDelayed(new Runnable() {
@@ -186,7 +183,6 @@ public class DeviceDashboard extends AppCompatActivity {
         // We maintain the screen always on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyApp::MyWakelockTag");
@@ -198,7 +194,6 @@ public class DeviceDashboard extends AppCompatActivity {
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
         user_id = intent.getStringExtra(USER_ID);
 
-
         valueTemperature = findViewById(R.id.btTemperature);
         valueHumidity = findViewById(R.id.btHumidity);
         valueCO = findViewById(R.id.btCO);
@@ -207,11 +202,8 @@ public class DeviceDashboard extends AppCompatActivity {
         imgBluetooh = findViewById(R.id.imgBluetooth);
         imgConnectivity = findViewById(R.id.imgConnectivity);
 
-
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -223,7 +215,6 @@ public class DeviceDashboard extends AppCompatActivity {
         System.out.println("CREAMOS LA BASE DE DATOS");
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "pyrrha").build();
-
 
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
@@ -249,7 +240,6 @@ public class DeviceDashboard extends AppCompatActivity {
 
         this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
                 new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
-
 
         app.setDeviceType(Constants.DEVICE_TYPE);
         app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
@@ -277,19 +267,16 @@ public class DeviceDashboard extends AppCompatActivity {
         } catch (MqttException e) {
             if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
                 // error while connecting to the broker - send an intent to inform the user
-//                Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
-//                actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
-//                context.sendBroadcast(actionIntent);
+                // Intent actionIntent = new Intent(Constants.ACTION_INTENT_CONNECTIVITY_MESSAGE_RECEIVED);
+                // actionIntent.putExtra(Constants.CONNECTIVITY_MESSAGE, Constants.ERROR_BROKER_UNAVAILABLE);
+                // context.sendBroadcast(actionIntent);
                 imgConnectivity.setVisibility(View.VISIBLE);
-
             }
         }
 
-        // We use retrofit to call the api res
+        // We use retrofit to call the API
         retrofit = new RetrofitAdapter().getAdapter();
         retrofitService = retrofit.create(RetrofitService.class);
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -304,7 +291,6 @@ public class DeviceDashboard extends AppCompatActivity {
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
             valueTemperature.setText(parts[2] + "\n celsius");
             valueHumidity.setText(parts[4] + "\n %");
-
 
             if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 1000)
                 valueCO.setText("##.## \n ppm");
