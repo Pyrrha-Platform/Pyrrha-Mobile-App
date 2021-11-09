@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pyrrha</string>
+    <string name="prompt_email" />
+    <string name="prompt_password" />
     <string name="action_sign_in">Iniciando sesión</string>
     <string name="action_sign_in_short">Iniciando sesión</string>
     <string name="welcome">Bienvenidos</string>
     <string name="invalid_username">No es un nombre de usuario válido</string>
     <string name="invalid_password">La contraseña debe tener más de 5 caracteres</string>
     <string name="login_failed">Error de inicio de sesion</string>
+    <string name="title_activity_main">MainActivity</string>
     <string name="navigation_drawer_open">Cajón de navegación abierto</string>
     <string name="navigation_drawer_close">Cerrar el cajón de navegación</string>
+    <string name="nav_header_title">Marco Rodríguez</string>
+    <string name="nav_header_subtitle">mrodrise@prometeoplatform.com</string>
     <string name="nav_header_desc">Encabezado de navegación</string>
     <string name="action_settings">Ajustes</string>
     <string name="menu_home">Evento en tiempo real</string>
@@ -23,6 +28,7 @@
     <string name="no_data">Sin datos</string>
     <string name="connected">Conectado</string>
     <string name="disconnected">Desconectado</string>
+    <string name="title_devices">Pyrrha</string>
     <string name="error_bluetooth_not_supported">Bluetooth no es compatible.</string>
     <string name="unknown_device">Dispositivo desconocido</string>
     <string name="unknown_characteristic">Característica desconocida</string>
@@ -31,6 +37,9 @@
     <string name="scan">Escanear</string>
     <string name="temperature">Temperatura</string>
     <string name="humidity">Humedad</string>
+    <string name="co">CO</string>
+    <string name="no2">NO2</string>
+    <string name="_0">0</string>
     <string name="btn_start_message">Enviar Datos</string>
     <string name="please_wait">Espere por favor…</string>
     <string name="logged_in_new_notice">Un usuario identificado inició sesión por primera vez. Se creó un nuevo perfil en App ID. Ahora, cuando inicien sesión con las mismas credenciales desde cualquier dispositivo o cliente web, la aplicación mostrará su mismo perfil y selecciones.</string>

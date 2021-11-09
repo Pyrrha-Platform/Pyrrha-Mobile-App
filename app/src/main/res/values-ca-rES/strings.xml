@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pyrrha</string>
+    <string name="prompt_email" />
+    <string name="prompt_password" />
     <string name="action_sign_in">Iniciar sessió</string>
     <string name="action_sign_in_short">Iniciar sessió</string>
     <string name="welcome">Benvingut</string>
     <string name="invalid_username">No és un nom d\'usuari vàlid</string>
     <string name="invalid_password">La contrasenya ha de tenir més de 5 caràcters</string>
     <string name="login_failed">Error a l\'iniciar sessió</string>
+    <string name="title_activity_main">MainActivity</string>
     <string name="navigation_drawer_open">Obriu el calaix de navegació</string>
     <string name="navigation_drawer_close">Tanca el calaix de navegació</string>
+    <string name="nav_header_title">Marco Rodríguez</string>
+    <string name="nav_header_subtitle">mrodrise@prometeoplatform.com</string>
     <string name="nav_header_desc">Capçalera de navegació</string>
     <string name="action_settings">Configuració</string>
     <string name="menu_home">Esdeveniment en temps real</string>
@@ -23,6 +28,7 @@
     <string name="no_data">No hi ha informació</string>
     <string name="connected">Connectat</string>
     <string name="disconnected">Desconnectat</string>
+    <string name="title_devices">Pyrrha</string>
     <string name="error_bluetooth_not_supported">El Bluetooth no és compatible.</string>
     <string name="unknown_device">Dispositiu desconegut</string>
     <string name="unknown_characteristic">Característica desconeguda</string>
@@ -31,6 +37,9 @@
     <string name="scan">Escaneja</string>
     <string name="temperature">Temperatura</string>
     <string name="humidity">Humitat</string>
+    <string name="co">CO</string>
+    <string name="no2">NO2</string>
+    <string name="_0">0</string>
     <string name="btn_start_message">Enviar Dades</string>
     <string name="logged_in_again_notice">Un usuari identificat conegut va tornar a iniciar la sessió. El seu perfil s’obté de l’identificador de l’aplicació.</string>
     <string name="logged_in_new_notice">Un usuari identificat va iniciar la sessió per primera vegada. S\'ha creat un perfil nou a l\'aplicació ID. Ara, quan inicien la sessió amb les mateixes credencials des de qualsevol dispositiu o client web, l\'aplicació mostrarà el seu perfil i les seves seleccions.</string>
