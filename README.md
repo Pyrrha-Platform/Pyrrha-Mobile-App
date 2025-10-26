@@ -27,7 +27,7 @@ The application is built as a [Java Android Application](https://developer.samsu
 
 1. Now that the project builds locally, you can run it on the simulator. If the app doesn't automatically launch, look for the Pyrrha app icon amongst the phone's apps.
 1. When the project launches, you'll need to log into it using an account of a user you set up in App ID.
-1. After logging in, the UI for scanning for Prometeo sensors will be shown.
+1. After logging in, the UI for scanning for Prometeo devices will be shown.
 
 ## Running on a physical phone
 
