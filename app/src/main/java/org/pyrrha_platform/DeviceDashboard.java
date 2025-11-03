@@ -42,6 +42,7 @@ import org.pyrrha_platform.utils.Constants;
 import org.pyrrha_platform.utils.MessageFactory;
 import org.pyrrha_platform.utils.MyIoTActionListener;
 import org.pyrrha_platform.utils.PyrrhaEvent;
+import org.pyrrha_platform.galaxy.ProviderService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -91,6 +92,9 @@ public class DeviceDashboard extends AppCompatActivity {
     private String user_id;
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
+    private ProviderService mProviderService;
+    private boolean mIsProviderServiceBound = false;
+    
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -111,6 +115,27 @@ public class DeviceDashboard extends AppCompatActivity {
             mBluetoothLeService = null;
         }
     };
+    
+    // ProviderService connection for Galaxy Watch integration
+    private final ServiceConnection mProviderServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mProviderService = ((ProviderService.LocalBinder) service).getService();
+            mIsProviderServiceBound = true;
+            Log.d(TAG, "ProviderService connected - starting watch discovery");
+            
+            // Start looking for Galaxy Watches
+            mProviderService.findWatches();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mProviderService = null;
+            mIsProviderServiceBound = false;
+            Log.d(TAG, "ProviderService disconnected");
+        }
+    };
+    
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
@@ -204,6 +229,10 @@ public class DeviceDashboard extends AppCompatActivity {
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        
+        // Bind to ProviderService for Galaxy Watch integration
+        Intent providerServiceIntent = new Intent(this, ProviderService.class);
+        bindService(providerServiceIntent, mProviderServiceConnection, BIND_AUTO_CREATE);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -326,6 +355,25 @@ public class DeviceDashboard extends AppCompatActivity {
             pe.setHumidity(Float.parseFloat(parts[4]));
             pe.setDevice_timestamp(f.format(device_timestamp));
 
+
+            // Send sensor data to Galaxy Watch
+            if (mIsProviderServiceBound && mProviderService != null) {
+                try {
+                    float temperature = Float.parseFloat(parts[2]);
+                    float humidity = Float.parseFloat(parts[4]);
+                    float co = Float.parseFloat(parts[6]);
+                    float no2 = Float.parseFloat(parts[8]);
+                    
+                    // Validate and sanitize CO and NO2 readings
+                    if (co < 0 || co > 1000) co = 0.0f;
+                    if (no2 < 0 || no2 > 10) no2 = 0.0f;
+                    
+                    mProviderService.updateSensorData(temperature, humidity, co, no2, mDeviceName);
+                    Log.d(TAG, "Sent sensor data to Galaxy Watch: T=" + temperature + "°C, H=" + humidity + "%, CO=" + co + "ppm, NO2=" + no2 + "ppm");
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Failed to parse sensor data for Galaxy Watch: " + e.getMessage());
+                }
+            }
 
             // We send the data to the cloud through IOT Platform
             try {
@@ -683,6 +731,13 @@ public class DeviceDashboard extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(mGattUpdateReceiver);
         unbindService(mServiceConnection);
+        
+        // Unbind ProviderService for Galaxy Watch
+        if (mIsProviderServiceBound) {
+            unbindService(mProviderServiceConnection);
+            mIsProviderServiceBound = false;
+        }
+        
         mBluetoothLeService.close();
         handler.removeCallbacksAndMessages(null);
 

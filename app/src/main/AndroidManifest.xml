@@ -47,6 +47,7 @@
 
         <!-- For Galaxy Watch -->
         <service android:name="org.pyrrha_platform.galaxy.ConsumerService" />
+        <service android:name="org.pyrrha_platform.galaxy.ProviderService" />
 
         <meta-data
             android:name="AccessoryServicesLocation"
