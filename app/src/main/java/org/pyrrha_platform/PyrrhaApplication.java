@@ -253,7 +253,7 @@ public class PyrrhaApplication extends Application {
         this.organization = organization;
     }
 
-    public String getDeviceId() {
+    public String getPyrrhaDeviceId() {
         return deviceId;
     }
 

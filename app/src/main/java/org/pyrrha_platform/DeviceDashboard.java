@@ -247,7 +247,7 @@ public class DeviceDashboard extends AppCompatActivity {
         app.setAuthToken(BuildConfig.FLAVOR_IOT_TOKEN);
 
         Log.d(TAG, "We are going to create the iotClient");
-        IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
+        IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getPyrrhaDeviceId(), app.getDeviceType(), app.getAuthToken());
 
         try {
             SocketFactory factory = null;

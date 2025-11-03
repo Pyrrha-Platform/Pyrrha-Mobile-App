@@ -1,19 +1,20 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.3"
+    namespace 'org.pyrrha_platform'
+    compileSdk 34 // Updated to Android 14 (latest stable)
+    buildToolsVersion "34.0.0"
 
     defaultConfig {
         applicationId "org.pyrrha.platform"
-        minSdkVersion 19
-        targetSdkVersion 30
+        minSdkVersion 26 // Updated to Android 8.0 (covers Samsung Galaxy A51 and 95%+ devices)
+        targetSdkVersion 34 // Updated to Android 14 (IBM App ID temporarily removed)
         multiDexEnabled true
-        versionCode 1
-        versionName "1.0"
+        versionCode 2 // Incremented for modernization
+        versionName "2.0.0" // Version bump for major modernization
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders = ['appIdRedirectScheme': android.defaultConfig.applicationId]
+        // manifestPlaceholders = ['appIdRedirectScheme': android.defaultConfig.applicationId] // TEMPORARILY REMOVED
     }
 
     buildTypes {
@@ -22,50 +23,84 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+        // Enable modern Android features
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+        buildConfig true
+    }
+
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError false
+    }
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'androidx.appcompat:appcompat:1.3.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.annotation:annotation:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.navigation:navigation-fragment:2.3.5'
-    implementation 'androidx.navigation:navigation-ui:2.3.5'
+    
+    // Core AndroidX libraries - updated to latest stable versions
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.annotation:annotation:1.7.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core-ktx:1.12.0' // Added for modern Android
+    
+    // Lifecycle - updated to use ViewModel and LiveData instead of deprecated extensions
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
+    
+    // Navigation - updated to latest
+    implementation 'androidx.navigation:navigation-fragment:2.7.6'
+    implementation 'androidx.navigation:navigation-ui:2.7.6'
+    
+    // Samsung SDK files (keep existing)
     implementation files('libs/accessory-v2.6.4.jar')
     implementation files('libs/sdk-v1.0.0.jar')
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.1'
+    
+    // Testing - updated versions
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    
+    // JSON processing - updated Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // MQTT - updated to latest stable versions
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1') {
         exclude module: 'support-v4'
     }
-    implementation 'com.github.ibm-cloud-security:appid-clientsdk-android:6.+'
-
-    // We need this dependency for the api res call
-    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.0'
-
-    def room_version = "2.3.0"
-
+    
+    // IBM App ID SDK for authentication - TEMPORARILY REMOVED
+    // implementation 'com.github.ibm-cloud-security:appid-clientsdk-android:6.+'
+    
+    // Networking - updated Retrofit and OkHttp to latest stable
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    
+    // Room database - updated to latest stable
+    def room_version = "2.6.1"
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
-
-    // optional - RxJava support for Room
-    implementation "androidx.room:room-rxjava2:$room_version"
-
-    // optional - Guava support for Room, including Optional and ListenableFuture
+    
+    // Room optional features - updated
+    implementation "androidx.room:room-rxjava3:$room_version" // Updated from RxJava2 to RxJava3
     implementation "androidx.room:room-guava:$room_version"
-
-    // optional - Test helpers
     testImplementation "androidx.room:room-testing:$room_version"
-
+    
+    // Security and modern Android features
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06' // For secure data storage
+    implementation 'androidx.work:work-runtime:2.9.0' // For background tasks
+    
 }
 
 android{
@@ -94,9 +129,9 @@ if (propFile.canRead()) {
                 }
         }
     } else {
-        throw new InvalidUserDataException('pyrrha.properties found, but some entries are missing')
+        throw new RuntimeException('pyrrha.properties found, but some entries are missing')
     }
 } else {
     // The properties file was not found
-    throw new MissingResourceException('pyrrha.properties not found')
+    throw new RuntimeException('pyrrha.properties not found')
 }

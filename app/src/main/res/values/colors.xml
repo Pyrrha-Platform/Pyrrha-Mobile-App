@@ -3,4 +3,5 @@
     <color name="colorPrimary">#3B688C</color>
     <color name="colorPrimaryDark">#393E40</color>
     <color name="colorAccent">#5B7183</color>
+    <color name="browser_actions_title_color">#3B688C</color>
 </resources>
