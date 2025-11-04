@@ -28,6 +28,8 @@ import android.widget.TextView;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -42,6 +44,7 @@ import org.pyrrha_platform.utils.Constants;
 import org.pyrrha_platform.utils.MessageFactory;
 import org.pyrrha_platform.utils.MyIoTActionListener;
 import org.pyrrha_platform.utils.PyrrhaEvent;
+import org.pyrrha_platform.galaxy.ProviderService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,6 +67,7 @@ public class DeviceDashboard extends AppCompatActivity {
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String USER_ID = "USER_ID";
     private final static String TAG = DeviceDashboard.class.getSimpleName();
+    private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1001;
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
     private final UUID uuidService = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_SERVICE);
@@ -91,6 +95,9 @@ public class DeviceDashboard extends AppCompatActivity {
     private String user_id;
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
+    private ProviderService mProviderService;
+    private boolean mIsProviderServiceBound = false;
+    
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -101,9 +108,17 @@ public class DeviceDashboard extends AppCompatActivity {
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
+                return;
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mDeviceAddress);
+            
+            // Check for Bluetooth permissions before connecting
+            if (hasBluetoothPermissions()) {
+                // Automatically connects to the device upon successful start-up initialization.
+                mBluetoothLeService.connect(mDeviceAddress);
+            } else {
+                // Request permissions
+                requestBluetoothPermissions();
+            }
         }
 
         @Override
@@ -111,6 +126,83 @@ public class DeviceDashboard extends AppCompatActivity {
             mBluetoothLeService = null;
         }
     };
+    
+    // ProviderService connection for Galaxy Watch integration
+    private final ServiceConnection mProviderServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mProviderService = ((ProviderService.LocalBinder) service).getService();
+            mIsProviderServiceBound = true;
+            Log.d(TAG, "ProviderService connected - starting watch discovery");
+            
+            // Start looking for Galaxy Watches
+            mProviderService.findWatches();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mProviderService = null;
+            mIsProviderServiceBound = false;
+            Log.d(TAG, "ProviderService disconnected");
+        }
+    };
+    
+    // Helper method to check if Bluetooth permissions are granted
+    private boolean hasBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED &&
+                   ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // For older Android versions, permissions are granted at install time
+    }
+    
+    // Request Bluetooth permissions for Android 12+
+    private void requestBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            String[] permissions = {
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_ADVERTISE
+            };
+            ActivityCompat.requestPermissions(this, permissions, BLUETOOTH_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    // Handle permission request results
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == BLUETOOTH_PERMISSION_REQUEST_CODE) {
+            boolean allPermissionsGranted = true;
+            for (int result : grantResults) {
+                if (result != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+            
+            if (allPermissionsGranted) {
+                // Permissions granted, try to connect again
+                if (mBluetoothLeService != null) {
+                    mBluetoothLeService.connect(mDeviceAddress);
+                }
+            } else {
+                // Permissions denied, show a message and potentially finish the activity
+                Log.e(TAG, "Bluetooth permissions denied. Cannot connect to device.");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Bluetooth Permissions Required")
+                       .setMessage("This app needs Bluetooth permissions to connect to Prometeo devices. Please grant the permissions and restart the app.")
+                       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                           public void onClick(DialogInterface dialog, int id) {
+                               finish();
+                           }
+                       })
+                       .show();
+            }
+        }
+    }
+    
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
@@ -204,19 +296,27 @@ public class DeviceDashboard extends AppCompatActivity {
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        
+        // Bind to ProviderService for Galaxy Watch integration
+        Intent providerServiceIntent = new Intent(this, ProviderService.class);
+        bindService(providerServiceIntent, mProviderServiceConnection, BIND_AUTO_CREATE);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter(), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        }
 
         System.out.println("CREAMOS LA BASE DE DATOS");
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "pyrrha").build();
 
-        if (mBluetoothLeService != null) {
+        if (mBluetoothLeService != null && hasBluetoothPermissions()) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
@@ -238,8 +338,13 @@ public class DeviceDashboard extends AppCompatActivity {
             };
         }
 
-        this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
-                new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
+                    new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
+                    new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
+        }
 
         app.setDeviceType(Constants.DEVICE_TYPE);
         app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
@@ -247,7 +352,7 @@ public class DeviceDashboard extends AppCompatActivity {
         app.setAuthToken(BuildConfig.FLAVOR_IOT_TOKEN);
 
         Log.d(TAG, "We are going to create the iotClient");
-        IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getDeviceId(), app.getDeviceType(), app.getAuthToken());
+        IoTClient iotClient = IoTClient.getInstance(context, app.getOrganization(), app.getPyrrhaDeviceId(), app.getDeviceType(), app.getAuthToken());
 
         try {
             SocketFactory factory = null;
@@ -326,6 +431,25 @@ public class DeviceDashboard extends AppCompatActivity {
             pe.setHumidity(Float.parseFloat(parts[4]));
             pe.setDevice_timestamp(f.format(device_timestamp));
 
+
+            // Send sensor data to Galaxy Watch
+            if (mIsProviderServiceBound && mProviderService != null) {
+                try {
+                    float temperature = Float.parseFloat(parts[2]);
+                    float humidity = Float.parseFloat(parts[4]);
+                    float co = Float.parseFloat(parts[6]);
+                    float no2 = Float.parseFloat(parts[8]);
+                    
+                    // Validate and sanitize CO and NO2 readings
+                    if (co < 0 || co > 1000) co = 0.0f;
+                    if (no2 < 0 || no2 > 10) no2 = 0.0f;
+                    
+                    mProviderService.updateSensorData(temperature, humidity, co, no2, mDeviceName);
+                    Log.d(TAG, "Sent sensor data to Galaxy Watch: T=" + temperature + "°C, H=" + humidity + "%, CO=" + co + "ppm, NO2=" + no2 + "ppm");
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Failed to parse sensor data for Galaxy Watch: " + e.getMessage());
+                }
+            }
 
             // We send the data to the cloud through IOT Platform
             try {
@@ -683,6 +807,13 @@ public class DeviceDashboard extends AppCompatActivity {
         super.onDestroy();
         unregisterReceiver(mGattUpdateReceiver);
         unbindService(mServiceConnection);
+        
+        // Unbind ProviderService for Galaxy Watch
+        if (mIsProviderServiceBound) {
+            unbindService(mProviderServiceConnection);
+            mIsProviderServiceBound = false;
+        }
+        
         mBluetoothLeService.close();
         handler.removeCallbacksAndMessages(null);
 

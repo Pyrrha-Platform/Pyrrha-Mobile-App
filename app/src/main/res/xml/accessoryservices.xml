@@ -32,7 +32,31 @@
     ]>
 <resources>
 
-    <application name="Pyrrha" >
+    <application name="PyrrhaMobileProvider" >
+        <!-- Primary Provider Service for Galaxy Watch Integration -->
+        <serviceProfile
+            id="/org/pyrrha-platform/readings"
+            name="PyrrhaSensorProvider"
+            role="provider"
+            serviceImpl="org.pyrrha_platform.galaxy.ProviderService"
+            version="2.0"
+            serviceLimit="ANY"
+            serviceTimeout="10000">
+            <supportedTransports>
+                <transport type="TRANSPORT_BT" />
+                <transport type="TRANSPORT_WIFI" />
+            </supportedTransports>
+            <serviceChannel
+                id="104"
+                dataRate="HIGH"
+                priority="HIGH"
+                reliability="ENABLE" />
+            <supportedFeatures>
+                <feature type="message" />
+            </supportedFeatures>
+        </serviceProfile>
+        
+        <!-- Legacy Consumer Service for backward compatibility -->
         <serviceProfile
             id="/sample/hellomessage"
             name="hellomessage"
@@ -46,7 +70,7 @@
             <supportedFeatures>
                 <feature type="message" />
             </supportedFeatures>
-    </serviceProfile>
+        </serviceProfile>
     </application>
 
 </resources>

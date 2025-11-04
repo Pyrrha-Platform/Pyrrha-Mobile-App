@@ -108,21 +108,16 @@ public class ConsumerActivity extends Activity {
     }
 
     public void mOnClick(View v) {
-        switch (v.getId()) {
-            case R.id.buttonFindPeerAgent: {
-                if (mIsBound && mConsumerService != null) {
-                    mConsumerService.findPeers();
-                    sendButtonClicked = false;
-                }
-                break;
+        int viewId = v.getId();
+        if (viewId == R.id.buttonFindPeerAgent) {
+            if (mIsBound && mConsumerService != null) {
+                mConsumerService.findPeers();
+                sendButtonClicked = false;
             }
-            case R.id.buttonSend: {
-                if (mIsBound && !sendButtonClicked && mConsumerService != null) {
-                    sendButtonClicked = mConsumerService.sendData("Holaaaaaa!") != -1;
-                }
-                break;
+        } else if (viewId == R.id.buttonSend) {
+            if (mIsBound && !sendButtonClicked && mConsumerService != null) {
+                sendButtonClicked = mConsumerService.sendData("Holaaaaaa!") != -1;
             }
-            default:
         }
     }
 

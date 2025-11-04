@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.pyrrha_platform.DeviceScanActivity;
 import org.pyrrha_platform.R;
@@ -34,18 +34,26 @@ public class LoginActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory(this))
+        loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory(this))
                 .get(LoginViewModel.class);
 
         final EditText usernameEditText = findViewById(R.id.username);
         final EditText passwordEditText = findViewById(R.id.password);
         final Button loginButton = findViewById(R.id.login);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
-        final String user;
+        String user;
 
         SharedPreferences prefe = getSharedPreferences("user_session", Context.MODE_PRIVATE);
 
         user = prefe.getString("user", null);
+
+        // Auto-login as Firefighter 1 for testing - bypass login screen
+        if (user == null) {
+            SharedPreferences.Editor editor = prefe.edit();
+            editor.putString("user", "firefighter_1");
+            editor.commit();
+            user = "firefighter_1";
+        }
 
         if (user != null) {
             // We go to the device scan activity after the login
@@ -53,6 +61,7 @@ public class LoginActivity extends AppCompatActivity {
             intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
             intent.putExtra(DeviceScanActivity.USER_ID, user);
             startActivity(intent);
+            finish(); // Close login activity
         }
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
