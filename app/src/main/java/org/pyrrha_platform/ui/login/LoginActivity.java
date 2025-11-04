@@ -41,11 +41,19 @@ public class LoginActivity extends AppCompatActivity {
         final EditText passwordEditText = findViewById(R.id.password);
         final Button loginButton = findViewById(R.id.login);
         final ProgressBar loadingProgressBar = findViewById(R.id.loading);
-        final String user;
+        String user;
 
         SharedPreferences prefe = getSharedPreferences("user_session", Context.MODE_PRIVATE);
 
         user = prefe.getString("user", null);
+
+        // Auto-login as Firefighter 1 for testing - bypass login screen
+        if (user == null) {
+            SharedPreferences.Editor editor = prefe.edit();
+            editor.putString("user", "firefighter_1");
+            editor.commit();
+            user = "firefighter_1";
+        }
 
         if (user != null) {
             // We go to the device scan activity after the login
@@ -53,6 +61,7 @@ public class LoginActivity extends AppCompatActivity {
             intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
             intent.putExtra(DeviceScanActivity.USER_ID, user);
             startActivity(intent);
+            finish(); // Close login activity
         }
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {

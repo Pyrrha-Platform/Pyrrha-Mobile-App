@@ -79,6 +79,18 @@ public class DeviceScanActivity extends AppCompatActivity {
 
         user_id = intent.getStringExtra(USER_ID);
 
+        // Auto-connect to Prometeo:00:00:00:00:00:01 for testing - bypass device scan
+        boolean autoConnect = true; // Set to false to use normal device scanning
+        if (autoConnect) {
+            Intent dashboardIntent = new Intent(DeviceScanActivity.this, DeviceDashboard.class);
+            dashboardIntent.putExtra(DeviceDashboard.EXTRAS_DEVICE_NAME, "Prometeo:00:00:00:00:00:01");
+            dashboardIntent.putExtra(DeviceDashboard.EXTRAS_DEVICE_ADDRESS, "00:00:00:00:00:01");
+            dashboardIntent.putExtra(DeviceDashboard.USER_ID, user_id);
+            startActivity(dashboardIntent);
+            finish(); // Close scan activity and proceed to dashboard
+            return; // Skip the rest of initialization
+        }
+
         listDevices = findViewById(R.id.listDevices);
         buttonScanDevice = findViewById(R.id.buttonScanDevice);
         buttonAddDevice = findViewById(R.id.buttonAddDevice);

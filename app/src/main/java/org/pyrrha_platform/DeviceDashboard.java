@@ -28,6 +28,8 @@ import android.widget.TextView;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -65,6 +67,7 @@ public class DeviceDashboard extends AppCompatActivity {
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String USER_ID = "USER_ID";
     private final static String TAG = DeviceDashboard.class.getSimpleName();
+    private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1001;
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
     private final UUID uuidService = UUID.fromString(BuildConfig.FLAVOR_DEVICE_UUID_SERVICE);
@@ -105,9 +108,17 @@ public class DeviceDashboard extends AppCompatActivity {
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
+                return;
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mDeviceAddress);
+            
+            // Check for Bluetooth permissions before connecting
+            if (hasBluetoothPermissions()) {
+                // Automatically connects to the device upon successful start-up initialization.
+                mBluetoothLeService.connect(mDeviceAddress);
+            } else {
+                // Request permissions
+                requestBluetoothPermissions();
+            }
         }
 
         @Override
@@ -135,6 +146,62 @@ public class DeviceDashboard extends AppCompatActivity {
             Log.d(TAG, "ProviderService disconnected");
         }
     };
+    
+    // Helper method to check if Bluetooth permissions are granted
+    private boolean hasBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED &&
+                   ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // For older Android versions, permissions are granted at install time
+    }
+    
+    // Request Bluetooth permissions for Android 12+
+    private void requestBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            String[] permissions = {
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.BLUETOOTH_SCAN,
+                android.Manifest.permission.BLUETOOTH_ADVERTISE
+            };
+            ActivityCompat.requestPermissions(this, permissions, BLUETOOTH_PERMISSION_REQUEST_CODE);
+        }
+    }
+    
+    // Handle permission request results
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == BLUETOOTH_PERMISSION_REQUEST_CODE) {
+            boolean allPermissionsGranted = true;
+            for (int result : grantResults) {
+                if (result != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+            
+            if (allPermissionsGranted) {
+                // Permissions granted, try to connect again
+                if (mBluetoothLeService != null) {
+                    mBluetoothLeService.connect(mDeviceAddress);
+                }
+            } else {
+                // Permissions denied, show a message and potentially finish the activity
+                Log.e(TAG, "Bluetooth permissions denied. Cannot connect to device.");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Bluetooth Permissions Required")
+                       .setMessage("This app needs Bluetooth permissions to connect to Prometeo devices. Please grant the permissions and restart the app.")
+                       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                           public void onClick(DialogInterface dialog, int id) {
+                               finish();
+                           }
+                       })
+                       .show();
+            }
+        }
+    }
     
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     // Handles various events fired by the Service.
@@ -239,13 +306,17 @@ public class DeviceDashboard extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter(), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        }
 
         System.out.println("CREAMOS LA BASE DE DATOS");
         db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "pyrrha").build();
 
-        if (mBluetoothLeService != null) {
+        if (mBluetoothLeService != null && hasBluetoothPermissions()) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
@@ -267,8 +338,13 @@ public class DeviceDashboard extends AppCompatActivity {
             };
         }
 
-        this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
-                new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
+                    new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            this.getApplicationContext().registerReceiver(iotBroadCastReceiver,
+                    new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
+        }
 
         app.setDeviceType(Constants.DEVICE_TYPE);
         app.setDeviceId(user_id.replace("@", "-"));   // TO-DO: check this part
