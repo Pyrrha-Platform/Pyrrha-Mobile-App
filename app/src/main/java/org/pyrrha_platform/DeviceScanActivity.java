@@ -56,7 +56,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                                     addresses.add(address);
                                     bluetoothDevices.add(device);
                                     deviceNames.add(name);
-                                    mLeDeviceListAdapter.notifyDataSetChanged();
+                                    if (mLeDeviceListAdapter != null) { mLeDeviceListAdapter.notifyDataSetChanged(); }
                                 }
                             }
                         }
@@ -195,7 +195,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     public void scanClicked(View view) {
         buttonScanDevice.setEnabled(false);
         buttonAddDevice.setEnabled(false);
-        mLeDeviceListAdapter.clear();
+        if (mLeDeviceListAdapter != null) { mLeDeviceListAdapter.clear(); }
         bluetoothDevices.clear();
         addresses.clear();
         deviceNames.clear();
@@ -223,10 +223,15 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     }
 
+    public void simulateClicked(View view) {
+        Intent intent = new Intent(DeviceScanActivity.this, org.pyrrha_platform.simulation.SimulationTestActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mLeDeviceListAdapter.clear();
+        if (mLeDeviceListAdapter != null) { mLeDeviceListAdapter.clear(); }
         bluetoothDevices.clear();
         addresses.clear();
         deviceNames.clear();

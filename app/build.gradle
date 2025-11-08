@@ -73,11 +73,8 @@ dependencies {
     // JSON processing - updated Gson
     implementation 'com.google.code.gson:gson:2.10.1'
     
-    // MQTT - updated to latest stable versions
+    // MQTT - pure Java client only (Android 12+ compatible)
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    implementation('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1') {
-        exclude module: 'support-v4'
-    }
     
     // IBM App ID SDK for authentication - TEMPORARILY REMOVED
     // implementation 'com.github.ibm-cloud-security:appid-clientsdk-android:6.+'

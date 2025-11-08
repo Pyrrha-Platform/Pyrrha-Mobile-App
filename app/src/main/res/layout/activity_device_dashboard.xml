@@ -201,6 +201,18 @@
         app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
     <Button
+        android:id="@+id/btTest"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@drawable/ic_test"
+        android:onClick="testClicked"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.72"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+    <Button
         android:id="@+id/btLogin"
         android:layout_width="20dp"
         android:layout_height="20dp"

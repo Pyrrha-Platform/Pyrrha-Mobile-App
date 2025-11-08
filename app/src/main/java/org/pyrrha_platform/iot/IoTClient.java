@@ -18,14 +18,15 @@ package org.pyrrha_platform.iot;
 import android.content.Context;
 import android.util.Log;
 
-import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import javax.net.SocketFactory;
 
@@ -39,10 +40,13 @@ public class IoTClient {
     private static final String IOT_ORGANIZATION_TCP = ".messaging.internetofthings.ibmcloud.com:1883";
     private static final String IOT_ORGANIZATION_SSL = ".messaging.internetofthings.ibmcloud.com:8883";
     private static final String IOT_DEVICE_USERNAME = "use-token-auth";
-
+    
+    // Local MQTT broker configuration
+    private static final String LOCAL_MQTT_HOST = "10.0.2.2";
+    private static final String LOCAL_MQTT_PORT = "1883";
     private static IoTClient instance;
     private final Context context;
-    private MqttAndroidClient client;
+    private MqttAsyncClient client;
     private String organization;
     private String deviceType;
     private String deviceID;
@@ -123,45 +127,79 @@ public class IoTClient {
      */
     public IMqttToken connectDevice(IoTCallbacks callbacks, IoTActionListener listener, SocketFactory factory) throws MqttException {
         Log.d(TAG, ".connectDevice() entered");
-        String clientID = "d:" + this.getOrganization() + ":" + this.getDeviceType() + ":" + this.getDeviceID();
+        
+        // Use local MQTT broker configuration instead of IBM Watson IoT
+        String clientID;
         String connectionURI;
-        if (factory == null || this.getOrganization().equals("quickstart")) {
-            connectionURI = "tcp://" + this.getOrganization() + IOT_ORGANIZATION_TCP;
+        String username;
+        String password;
+        
+        // Check if we should use local MQTT broker (based on properties configuration)
+        if (this.getOrganization() != null && this.getOrganization().equals("local")) {
+            // Local MQTT broker configuration
+            // Map any device ID to one of the 4 available Prometeo devices (01-04)
+            String deviceNumber = "1"; // Default to device 1 for now
+            if (this.getDeviceID() != null && this.getDeviceID().length() > 0) {
+                // Simple hash-based mapping to distribute devices across 01-04
+                int hash = Math.abs(this.getDeviceID().hashCode()) % 4;
+                deviceNumber = String.valueOf(hash + 1);
+            }
+            clientID = "Prometeo:00:00:00:00:00:0" + deviceNumber;
+            connectionURI = "tcp://" + LOCAL_MQTT_HOST + ":" + LOCAL_MQTT_PORT;
+            username = clientID; // VerneMQ uses client ID as username
+            password = "password"; // Standard password for local development
+            Log.d(TAG, "Using local MQTT broker: " + connectionURI + " with device: " + clientID);
         } else {
-            connectionURI = "ssl://" + this.getOrganization() + IOT_ORGANIZATION_SSL;
+            // Original IBM Watson IoT configuration for backward compatibility
+            clientID = "d:" + this.getOrganization() + ":" + this.getDeviceType() + ":" + this.getDeviceID();
+            if (factory == null || this.getOrganization().equals("quickstart")) {
+                connectionURI = "tcp://" + this.getOrganization() + IOT_ORGANIZATION_TCP;
+            } else {
+                connectionURI = "ssl://" + this.getOrganization() + IOT_ORGANIZATION_SSL;
+            }
+            username = IOT_DEVICE_USERNAME;
+            password = this.getAuthorizationToken();
+            Log.d(TAG, "Using IBM Watson IoT: " + connectionURI);
         }
 
         if (!isMqttConnected()) {
-            if (client != null) {
-                client.unregisterResources();
-                client = null;
+            if (client != null && client.isConnected()) {
+                try {
+                    client.disconnect();
+                } catch (MqttException e) {
+                    Log.w(TAG, "Error disconnecting existing client", e);
+                }
             }
-            client = new MqttAndroidClient(context, connectionURI, clientID);
-            client.setCallback(callbacks);
-
-            char[] password = this.getAuthorizationToken().toCharArray();
-
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setCleanSession(true);
-            options.setUserName(IOT_DEVICE_USERNAME);
-            options.setPassword(password);
-
-            if (factory != null && !this.getOrganization().equals("quickstart")) {
-                options.setSocketFactory(factory);
-            }
-
-            Log.d(TAG, "Connecting to server: " + connectionURI);
+            
             try {
-                // connect
-                return client.connect(options, context, listener);
+                // Use pure Java MQTT client with memory persistence
+                MemoryPersistence persistence = new MemoryPersistence();
+                client = new MqttAsyncClient(connectionURI, clientID, persistence);
+                client.setCallback(callbacks);
+
+                MqttConnectOptions options = new MqttConnectOptions();
+                options.setCleanSession(true);
+                options.setUserName(username);
+                options.setPassword(password.toCharArray());
+                options.setConnectionTimeout(30);
+                options.setKeepAliveInterval(60);
+                options.setAutomaticReconnect(true);
+
+                if (factory != null && !this.getOrganization().equals("quickstart")) {
+                    options.setSocketFactory(factory);
+                }
+
+                Log.d(TAG, "Connecting to server: " + connectionURI + " with clientID: " + clientID);
+                
+                // Connect with pure Java client
+                return client.connect(options, null, listener);
             } catch (MqttException e) {
-                Log.e(TAG, "Exception caught while attempting to connect to server", e.getCause());
+                Log.e(TAG, "Exception caught while attempting to connect to server", e);
                 throw e;
             }
         }
         return null;
     }
-
     /**
      * Disconnect the device from the Watson Internet of Things Platform
      *
@@ -173,9 +211,9 @@ public class IoTClient {
         Log.d(TAG, ".disconnectDevice() entered");
         if (isMqttConnected()) {
             try {
-                return client.disconnect(context, listener);
+                return client.disconnect(null, listener);
             } catch (MqttException e) {
-                Log.e(TAG, "Exception caught while attempting to disconnect from server", e.getCause());
+                Log.e(TAG, "Exception caught while attempting to disconnect from server", e);
                 throw e;
             }
         }
@@ -356,7 +394,7 @@ public class IoTClient {
             try {
                 // create ActionListener to handle message published results
                 Log.d(TAG, ".publish() - Publishing " + payload + " to: " + topic + ", with QoS: " + qos + " with retained flag set to " + retained);
-                return client.publish(topic, mqttMsg, context, listener);
+                return client.publish(topic, mqttMsg, null, listener);
             } catch (MqttPersistenceException e) {
                 Log.e(TAG, "MqttPersistenceException caught while attempting to publish a message", e.getCause());
                 throw e;

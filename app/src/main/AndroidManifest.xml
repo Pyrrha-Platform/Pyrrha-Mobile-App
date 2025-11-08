@@ -46,10 +46,6 @@
             android:name=".ble.BluetoothLeService"
             android:enabled="true" />
 
-        <!-- For IoT Platform -->
-        <service
-            android:name="org.eclipse.paho.android.service.MqttService" />
-
         <!-- For Galaxy Watch -->
         <service android:name="org.pyrrha_platform.galaxy.ConsumerService" />
         <service android:name="org.pyrrha_platform.galaxy.ProviderService" />
@@ -80,6 +76,12 @@
             android:name=".DeviceDashboard"
             android:exported="false"
             android:launchMode="singleInstance" />
+
+        <!-- Prometeo device sensor simulation activity -->
+        <activity
+            android:name=".simulation.SimulationTestActivity"
+            android:exported="false"
+            android:label="Prometeo Simulator" />
 
     </application>
 </manifest>
