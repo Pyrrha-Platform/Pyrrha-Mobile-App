@@ -45,6 +45,7 @@ import org.pyrrha_platform.utils.MessageFactory;
 import org.pyrrha_platform.utils.MyIoTActionListener;
 import org.pyrrha_platform.utils.PyrrhaEvent;
 import org.pyrrha_platform.galaxy.ProviderService;
+import org.pyrrha_platform.simulation.BluetoothDataSimulator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -78,6 +79,7 @@ public class DeviceDashboard extends AppCompatActivity {
     Button valueHumidity;
     Button valueCO;
     Button valueNO2;
+    Button btTest;
     ImageView imgBluetooh;
     ImageView imgConnectivity;
     final Handler handler = new Handler();
@@ -97,6 +99,10 @@ public class DeviceDashboard extends AppCompatActivity {
     private BluetoothLeService mBluetoothLeService;
     private ProviderService mProviderService;
     private boolean mIsProviderServiceBound = false;
+    
+    // Bluetooth simulation components
+    private BluetoothDataSimulator mBluetoothSimulator;
+    private boolean mIsSimulationMode = false;
     
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -290,9 +296,13 @@ public class DeviceDashboard extends AppCompatActivity {
         valueHumidity = findViewById(R.id.btHumidity);
         valueCO = findViewById(R.id.btCO);
         valueNO2 = findViewById(R.id.btNO2);
+        btTest = findViewById(R.id.btTest);
 
         imgBluetooh = findViewById(R.id.imgBluetooth);
         imgConnectivity = findViewById(R.id.imgConnectivity);
+        
+        // Initialize Bluetooth data simulator
+        initializeBluetoothSimulator();
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -390,22 +400,39 @@ public class DeviceDashboard extends AppCompatActivity {
 
             // We display the data in the mobile screen
             String[] parts = data.split(" ");
-
-            //           System.out.println("RS CO: " + parts[8]);
+            
+            // Handle different data formats (real Bluetooth vs simulated)
+            String tempValue, humValue, coValue, no2Value;
+            
+            if (mIsSimulationMode || data.startsWith("SimBT")) {
+                // Simulated data format: "SimBT tempValue tempStdDev humValue humStdDev coValue coStdDev no2Value no2StdDev"
+                tempValue = parts[1];
+                humValue = parts[3]; 
+                coValue = parts[5];
+                no2Value = parts[7];
+                Log.d(TAG, "Processing simulated data - T:" + tempValue + " H:" + humValue + " CO:" + coValue + " NO2:" + no2Value);
+            } else {
+                // Real Bluetooth data format: assume original format
+                tempValue = parts[2];
+                humValue = parts[4];
+                coValue = parts[6];
+                no2Value = parts[8];
+                Log.d(TAG, "Processing real Bluetooth data");
+            }
 
             // tempValue, tempValueStDev, humValue, humValueStDev, coValue, coValueStDev, no2Value, no2ValueStDev
-            valueTemperature.setText(parts[2] + "\n celsius");
-            valueHumidity.setText(parts[4] + "\n %");
+            valueTemperature.setText(tempValue + "\n celsius");
+            valueHumidity.setText(humValue + "\n %");
 
-            if (Float.parseFloat(parts[6]) < 0 || Float.parseFloat(parts[6]) > 1000)
+            if (Float.parseFloat(coValue) < 0 || Float.parseFloat(coValue) > 1000)
                 valueCO.setText("##.## \n ppm");
             else
-                valueCO.setText(parts[6] + "\n ppm");
+                valueCO.setText(coValue + "\n ppm");
 
-            if (Float.parseFloat(parts[8]) < 0 || Float.parseFloat(parts[8]) > 10)
+            if (Float.parseFloat(no2Value) < 0 || Float.parseFloat(no2Value) > 10)
                 valueNO2.setText("##.## \n ppm");
             else
-                valueNO2.setText(parts[8] + "\n ppm");
+                valueNO2.setText(no2Value + "\n ppm");
 
             //         System.out.println("RS CO: " + parts[8]);
 //            System.out.println("RS NO2: " + parts[9]);
@@ -417,35 +444,38 @@ public class DeviceDashboard extends AppCompatActivity {
 
             Date device_timestamp = new Date();
 
-            // create a random PyrrhaEvent
+            // create a PyrrhaEvent from the sensor data
             PyrrhaEvent pe = new PyrrhaEvent();
             pe.setFirefighter_id(user_id);
-            pe.setDevice_id(mDeviceName);
+            pe.setDevice_id(mIsSimulationMode ? "Prometeo:00:00:00:00:00:01" : mDeviceName);
             pe.setDevice_battery_level("0");
             pe.setAcrolein((float) 0.0);
             pe.setBenzene((float) 0.0);
-            pe.setCarbon_monoxide(Float.parseFloat(parts[6]));
+            pe.setCarbon_monoxide(Float.parseFloat(coValue));
             pe.setFormaldehyde((float) 0.0);
-            pe.setNitrogen_dioxide(Float.parseFloat(parts[8]));
-            pe.setTemperature(Float.parseFloat(parts[2]));
-            pe.setHumidity(Float.parseFloat(parts[4]));
+            pe.setNitrogen_dioxide(Float.parseFloat(no2Value));
+            pe.setTemperature(Float.parseFloat(tempValue));
+            pe.setHumidity(Float.parseFloat(humValue));
             pe.setDevice_timestamp(f.format(device_timestamp));
 
 
             // Send sensor data to Galaxy Watch
             if (mIsProviderServiceBound && mProviderService != null) {
                 try {
-                    float temperature = Float.parseFloat(parts[2]);
-                    float humidity = Float.parseFloat(parts[4]);
-                    float co = Float.parseFloat(parts[6]);
-                    float no2 = Float.parseFloat(parts[8]);
+                    float temperature = Float.parseFloat(tempValue);
+                    float humidity = Float.parseFloat(humValue);
+                    float co = Float.parseFloat(coValue);
+                    float no2 = Float.parseFloat(no2Value);
                     
                     // Validate and sanitize CO and NO2 readings
                     if (co < 0 || co > 1000) co = 0.0f;
                     if (no2 < 0 || no2 > 10) no2 = 0.0f;
                     
-                    mProviderService.updateSensorData(temperature, humidity, co, no2, mDeviceName);
-                    Log.d(TAG, "Sent sensor data to Galaxy Watch: T=" + temperature + "°C, H=" + humidity + "%, CO=" + co + "ppm, NO2=" + no2 + "ppm");
+                    String deviceName = mIsSimulationMode ? "Prometeo-Simulator" : mDeviceName;
+                    mProviderService.updateSensorData(temperature, humidity, co, no2, deviceName);
+                    
+                    String dataSource = mIsSimulationMode ? "SIMULATED" : "BLUETOOTH";
+                    Log.i(TAG, "Sent " + dataSource + " sensor data to Galaxy Watch: T=" + temperature + "°C, H=" + humidity + "%, CO=" + co + "ppm, NO2=" + no2 + "ppm");
                 } catch (NumberFormatException e) {
                     Log.w(TAG, "Failed to parse sensor data for Galaxy Watch: " + e.getMessage());
                 }
@@ -576,6 +606,11 @@ public class DeviceDashboard extends AppCompatActivity {
             IoTClient iotClient = IoTClient.getInstance(context);
             String messageData = MessageFactory.getPyrrhaDeviceMessage(pe);
 
+            if (mIsSimulationMode) {
+                Log.i(TAG, "Publishing SIMULATED sensor data to MQTT: " + messageData);
+            } else {
+                Log.i(TAG, "Publishing real Bluetooth sensor data to MQTT: " + messageData);
+            }
             System.out.println(messageData);
 
             iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
@@ -758,6 +793,28 @@ public class DeviceDashboard extends AppCompatActivity {
 
     }
 
+    public void testClicked(View view) {
+        if (mBluetoothSimulator.isRunning()) {
+            // Stop simulation
+            mBluetoothSimulator.stopSimulation();
+            mIsSimulationMode = false;
+            btTest.setBackgroundResource(R.drawable.ic_test);
+            Log.i(TAG, "Bluetooth simulation stopped by user");
+            
+            // Show Bluetooth icon as we're no longer receiving simulated data
+            imgBluetooh.setVisibility(View.VISIBLE);
+        } else {
+            // Start simulation
+            mBluetoothSimulator.startSimulation();
+            mIsSimulationMode = true;
+            btTest.setBackgroundResource(R.drawable.ic_test_active);
+            Log.i(TAG, "Bluetooth simulation started by user");
+            
+            // Hide Bluetooth icon as we're now receiving simulated data
+            imgBluetooh.setVisibility(View.INVISIBLE);
+        }
+    }
+
     public void loginClicked(View view) {
         final Intent intent;
 
@@ -817,8 +874,34 @@ public class DeviceDashboard extends AppCompatActivity {
         mBluetoothLeService.close();
         handler.removeCallbacksAndMessages(null);
 
+        // Cleanup simulator
+        if (mBluetoothSimulator != null) {
+            mBluetoothSimulator.cleanup();
+        }
+        
         // we have to release the variablre to maintain the app connected
         mWakeLock.release();
+    }
+
+    /**
+     * Initialize the Bluetooth data simulator
+     */
+    private void initializeBluetoothSimulator() {
+        mBluetoothSimulator = new BluetoothDataSimulator(this);
+        mBluetoothSimulator.setDataCallback(new BluetoothDataSimulator.DataCallback() {
+            @Override
+            public void onDataReceived(String simulatedData) {
+                Log.d(TAG, "Received simulated Bluetooth data: " + simulatedData);
+                
+                // Process simulated data the same way as real Bluetooth data
+                displayData(simulatedData);
+                
+                // Log that this is simulated data for watch integration
+                if (mIsProviderServiceBound && mProviderService != null) {
+                    Log.d(TAG, "Simulated sensor data forwarded to Galaxy Watch integration");
+                }
+            }
+        });
     }
 
 

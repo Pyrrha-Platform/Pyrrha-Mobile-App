@@ -32,39 +32,57 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/buttonAddDevice"
-        android:layout_width="138dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="535dp"
-        android:background="#646464"
-        android:enabled="false"
-        android:onClick="addClicked"
-        android:text="@string/next"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintStart_toStartOf="parent">
 
-    <Button
-        android:id="@+id/buttonScanDevice"
-        android:layout_width="138dp"
-        android:layout_height="56dp"
-        android:onClick="scanClicked"
-        android:text="@string/scan"
-        android:textColor="#FFFFFF"
-        android:background="#3B688C"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/buttonAddDevice"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"/>
+        <Button
+            android:id="@+id/buttonScanDevice"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:onClick="scanClicked"
+            android:text="@string/scan"
+            android:textColor="#FFFFFF"
+            android:background="#3B688C"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonSimulate"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:onClick="simulateClicked"
+            android:text="Simulate"
+            android:textColor="#FFFFFF"
+            android:background="#FF6B35"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonAddDevice"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:background="#646464"
+            android:enabled="false"
+            android:onClick="addClicked"
+            android:text="@string/next"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 
     <ListView
         android:id="@+id/listDevices"
